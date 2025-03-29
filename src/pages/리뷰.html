@@ -1,0 +1,85 @@
+import React, { useState } from 'react';
+
+const ReviewForm = () => {
+  const [rating, setRating] = useState(0);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const availableTags = ['판타지', '로맨스', '무협', '라이트노벨', '일상', '성장', '힐링'];
+
+  return (
+    <div className="bg-white p-6">
+      <div className="page-header">
+        <h1 className="text-2xl font-bold mb-2">리뷰 작성</h1>
+        <p className="text-gray-600">웹소설에 대한 여러분의 생각을 들려주세요</p>
+      </div>
+
+      <div className="form-section space-y-6 mt-6">
+        <div className="input-group">
+          <h2 className="text-lg font-bold mb-2">작품 제목</h2>
+          <input
+            type="text"
+            placeholder="작품 제목을 입력해주세요"
+            className="w-full p-2 border rounded"
+          />
+        </div>
+
+        <div className="input-group">
+          <h2 className="text-lg font-bold mb-2">평점</h2>
+          <div className="flex space-x-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                onClick={() => setRating(star)}
+                className={`text-2xl ${rating >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="input-group">
+          <h2 className="text-lg font-bold mb-2">태그 선택</h2>
+          <div className="flex flex-wrap gap-2">
+            {availableTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => {
+                  setSelectedTags(prev =>
+                    prev.includes(tag) 
+                      ? prev.filter(t => t !== tag)
+                      : [...prev, tag]
+                  );
+                }}
+                className={`px-3 py-1 rounded-full ${
+                  selectedTags.includes(tag)
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="input-group">
+          <h2 className="text-lg font-bold mb-2">리뷰 내용</h2>
+          <textarea
+            placeholder="리뷰 내용을 입력해주세요"
+            className="w-full p-2 border rounded h-32"
+          />
+        </div>
+
+        <div className="submit-section">
+          <button 
+            className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+          >
+            리뷰 등록하기
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ReviewForm;

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>신작리뷰 - 웹소설 리뷰 커뮤니티</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            line-height: 1.6;
+            background-color: #f0f2f5;
+            color: #333;
+            padding-top: 60px;
+        }
+
+        /* 네비게이션 바 스타일 */
+        nav {
+            background: linear-gradient(135deg, #6e8efb, #4a90e2);
+            padding: 1rem 3rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 3rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            padding: 0.5rem 1.5rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            font-size: 1.1rem;
+        }
+
+        nav a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .login-button {
+            background-color: white;
+            color: #4a90e2;
+            padding: 0.5rem 2rem;
+            border-radius: 25px;
+            text-decoration: none;
+            transition: transform 0.3s;
+            font-size: 1.1rem;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        /* 신작리뷰 페이지 스타일 */
+        .new-reviews-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 3rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 4rem;
+            padding: 2rem 0;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        /* 필터 섹션 */
+        .filter-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 3rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            background: #f0f2f5;
+            color: #4a90e2;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-button:hover, .filter-button.active {
+            background: #4a90e2;
+            color: white;
+        }
+
+        /* 리뷰 목록 */
+        .review-list {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .review-item {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            transition: transform 0.3s;
+        }
+
+        .review-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .review-image {
+            width: 200px;
+            height: 250px;
+            object-fit: cover;
+        }
+
+        .review-content {
+            padding: 2rem;
+            flex: 1;
+        }
+
+        .review-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .review-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .review-rating {
+            color: #ffd700;
+            font-size: 1.2rem;
+        }
+
+        .review-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .review-excerpt {
+            color: #666;
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+        }
+
+        .review-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .review-tag {
+            background: #f0f2f5;
+            padding: 0.4rem 1rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            color: #4a90e2;
+        }
+
+        .read-more {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #4a90e2;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem;
+            background: linear-gradient(135deg, #6e8efb, #4a90e2);
+            color: white;
+            margin-top: 4rem;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .review-item {
+                flex-direction: column;
+            }
+
+            .review-image {
+                width: 100%;
+                height: 200px;
+            }
+
+            .new-reviews-container {
+                padding: 0 1rem;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index_hihaa03.html">홈</a></li>
+            <li><a href="genres.html">장르별</a></li>
+            <li><a href="new_reviews.html">신작리뷰</a></li>
+            <li><a href="best_reviews.html">베스트리뷰</a></li>
+            <li><a href="community.html">커뮤니티</a></li>
+        </ul>
+        <a href="로그인페이지.html" class="login-button">로그인</a>
+    </nav>
+
+    <div class="new-reviews-container">
+        <div class="page-header">
+            <h1>신작 리뷰</h1>
+            <p>최근 등록된 웹소설 리뷰를 만나보세요</p>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-buttons">
+                <button class="filter-button active">전체</button>
+                <button class="filter-button">판타지</button>
+                <button class="filter-button">로맨스</button>
+                <button class="filter-button">무협</button>
+                <button class="filter-button">라이트노벨</button>
+            </div>
+        </div>
+
+        <div class="review-list">
+            <div class="review-item">
+                <img src="/api/placeholder/200/250" alt="웹소설 표지" class="review-image">
+                <div class="review-content">
+                    <div class="review-meta">
+                        <span class="review-date">2024.03.18</span>
+                        <span class="review-rating">★★★★★</span>
+                    </div>
+                    <h2 class="review-title">이세계 여행사의 신입사원</h2>
+                    <p class="review-excerpt">
+                        현대 직장인의 고민과 판타지 세계의 모험을 절묘하게 버무린 신작. 
+                        특히 주인공의 현실적인 성장과 업무 처리 방식이 인상적이다. 
+                        이세계물의 신선한 해석이 돋보이는 작품...
+                    </p>
+                    <div class="review-tags">
+                        <span class="review-tag">판타지</span>
+                        <span class="review-tag">일상물</span>
+                        <span class="review-tag">신작</span>
+                    </div>
+                    <a href="#" class="read-more">리뷰 전체보기 →</a>
+                </div>
+            </div>
+
+            <div class="review-item">
+                <img src="/api/placeholder/200/250" alt="웹소설 표지" class="review-image">
+                <div class="review-content">
+                    <div class="review-meta">
+                        <span class="review-date">2024.03.17</span>
+                        <span class="review-rating">★★★★☆</span>
+                    </div>
+                    <h2 class="review-title">프로그래머의 마법공방</h2>
+                    <p class="review-excerpt">
+                        현대 기술과 마법의 만남이라는 신선한 설정이 인상적인 작품. 
+                        프로그래밍 지식을 마법으로 승화시키는 과정이 흥미진진하다. 
+                        다만 후반부의 전개가 다소 급격한 감이 있어 아쉬움이...
+                    </p>
+                    <div class="review-tags">
+                        <span class="review-tag">현대판타지</span>
+                        <span class="review-tag">기술</span>
+                        <span class="review-tag">신작</span>
+                    </div>
+                    <a href="#" class="read-more">리뷰 전체보기 →</a>
+                </div>
+            </div>
+
+            <div class="review-item">
+                <img src="/api/placeholder/200/250" alt="웹소설 표지" class="review-image">
+                <div class="review-content">
+                    <div class="review-meta">
+                        <span class="review-date">2024.03.16</span>
+                        <span class="review-rating">★★★★★</span>
+                    </div>
+                    <h2 class="review-title">천년의 레시피</h2>
+                    <p class="review-excerpt">
+                        동양 판타지와 요리를 접목한 독특한 소재의 작품. 
+                        각 요리에 담긴 이야기와 감정선이 섬세하게 표현되어 있다. 
+                        특히 주인공의 성장과 요리를 통한 관계 형성이...
+                    </p>
+                    <div class="review-tags">
+                        <span class="review-tag">판타지</span>
+                        <span class="review-tag">요리</span>
+                        <span class="review-tag">신작</span>
+                    </div>
+                    <a href="#" class="read-more">리뷰 전체보기 →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        © 2024 웹소설 리뷰 커뮤니티. All rights reserved.
+    </footer>
+
+    <script>
+        function goToLoginPage() {
+            window.location.href = '로그인페이지.html';
+        }
+
+        // 필터 버튼 활성화 기능
+        const filterButtons = document.querySelectorAll('.filter-button');
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

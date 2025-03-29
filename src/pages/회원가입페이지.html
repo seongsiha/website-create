@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - 웹소설 리뷰 커뮤니티</title>
+    <style>
+        /* 기본 스타일 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            line-height: 1.6;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .signup-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 2rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        /* 닉네임 필드 스타일 개선 */
+        .nickname-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .nickname-input-wrapper {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        .nickname-input-wrapper input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .nickname-input-wrapper input:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .check-button {
+            padding: 0.8rem 1.2rem;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+            height: 42px;
+            white-space: nowrap;
+        }
+
+        .check-button:hover {
+            background-color: #357abd;
+        }
+
+        .check-result {
+            font-size: 0.85rem;
+            margin-top: 0.4rem;
+            padding-left: 0.3rem;
+            transition: all 0.2s ease;
+            min-height: 20px;
+        }
+
+        .available {
+            color: #2ea043;
+        }
+
+        .unavailable {
+            color: #d73a49;
+        }
+
+        /* 일반 입력 필드 스타일 */
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        /* 제출 버튼 스타일 */
+        .submit-button {
+            width: 100%;
+            padding: 1rem;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-top: 1.5rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .submit-button:hover {
+            background-color: #357abd;
+        }
+
+        /* 도움말 링크 스타일 */
+        .helper-links {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .helper-links a {
+            color: #4a90e2;
+            text-decoration: none;
+            margin: 0 0.5rem;
+            transition: color 0.2s ease;
+        }
+
+        .helper-links a:hover {
+            color: #357abd;
+            text-decoration: underline;
+        }
+
+        /* 로딩 효과 */
+        .checking {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="logo">
+            <h1>웹소설 리뷰 커뮤니티</h1>
+            <p>회원가입</p>
+        </div>
+
+        <form onsubmit="handleSignup(event)">
+            <div class="form-group">
+                <label for="nickname">닉네임</label>
+                <div class="nickname-group">
+                    <div class="nickname-input-wrapper">
+                        <input type="text" id="nickname" placeholder="닉네임을 입력하세요" required>
+                    </div>
+                    <button type="button" class="check-button" onclick="checkNickname()">중복 확인</button>
+                </div>
+                <div id="nickname-result" class="check-result"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">이메일</label>
+                <input type="email" id="email" placeholder="이메일을 입력하세요" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">비밀번호</label>
+                <input type="password" id="password" placeholder="비밀번호를 입력하세요" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password-confirm">비밀번호 확인</label>
+                <input type="password" id="password-confirm" placeholder="비밀번호를 다시 입력하세요" required>
+            </div>
+
+            <button type="submit" class="submit-button">회원가입</button>
+
+            <div class="helper-links">
+                <p>이미 계정이 있으신가요? <a href="로그인페이지.html">로그인하기</a></p>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let isNicknameAvailable = false;
+
+        function checkNickname() {
+            const nickname = document.getElementById('nickname').value;
+            const resultDiv = document.getElementById('nickname-result');
+            const button = document.querySelector('.check-button');
+            const input = document.getElementById('nickname');
+            
+            if (!nickname) {
+                resultDiv.textContent = '닉네임을 입력해주세요.';
+                resultDiv.className = 'check-result unavailable';
+                return;
+            }
+
+            // 로딩 상태 표시
+            button.classList.add('checking');
+            resultDiv.textContent = '확인 중...';
+            resultDiv.className = 'check-result';
+            input.disabled = true;
+
+            // 서버 요청 시뮬레이션
+            setTimeout(() => {
+                const isAvailable = Math.random() > 0.5;
+                if (isAvailable) {
+                    resultDiv.textContent = '✓ 사용 가능한 닉네임입니다.';
+                    resultDiv.className = 'check-result available';
+                    isNicknameAvailable = true;
+                } else {
+                    resultDiv.textContent = '✕ 이미 사용 중인 닉네임입니다.';
+                    resultDiv.className = 'check-result unavailable';
+                    isNicknameAvailable = false;
+                }
+                button.classList.remove('checking');
+                input.disabled = false;
+            }, 800);
+        }
+
+        document.getElementById('nickname').addEventListener('input', () => {
+            isNicknameAvailable = false;
+            const resultDiv = document.getElementById('nickname-result');
+            resultDiv.textContent = '';
+        });
+
+        function handleSignup(e) {
+            e.preventDefault();
+            
+            if (!isNicknameAvailable) {
+                alert('닉네임 중복 확인을 해주세요.');
+                return;
+            }
+
+            const nickname = document.getElementById('nickname').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const passwordConfirm = document.getElementById('password-confirm').value;
+
+            if (password !== passwordConfirm) {
+                alert('비밀번호가 일치하지 않습니다.');
+                return;
+            }
+
+            console.log('회원가입 시도:', { nickname, email });
+            // 실제 회원가입 로직 구현
+        }
+    </script>
+</body>
+</html>

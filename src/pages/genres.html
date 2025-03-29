@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>장르별 - 웹소설 리뷰 커뮤니티</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            line-height: 1.6;
+            background-color: #f0f2f5;
+            color: #333;
+            padding-top: 60px;
+        }
+
+        nav {
+            background: linear-gradient(135deg, #6e8efb, #4a90e2);
+            padding: 1rem 3rem; /* 네비게이션 좌우 패딩 증가 */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 3rem; /* 네비게이션 메뉴 간격 증가 */
+        }
+
+        nav a {
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            padding: 0.5rem 1.5rem; /* 네비게이션 링크 패딩 증가 */
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            font-size: 1.1rem; /* 폰트 크기 증가 */
+        }
+
+        nav a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .login-button {
+            background-color: white;
+            color: #4a90e2;
+            padding: 0.5rem 2rem; /* 로그인 버튼 패딩 증가 */
+            border-radius: 25px;
+            text-decoration: none;
+            transition: transform 0.3s;
+            font-size: 1.1rem;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .genre-container {
+            max-width: 1400px; /* 최대 너비 증가 */
+            margin: 4rem auto; /* 상하 마진 증가 */
+            padding: 0 3rem; /* 좌우 패딩 증가 */
+        }
+
+        .genre-header {
+            text-align: center;
+            margin-bottom: 4rem; /* 헤더 마진 증가 */
+            padding: 2rem 0; /* 헤더 패딩 추가 */
+        }
+
+        .genre-header h1 {
+            font-size: 3rem; /* 제목 크기 증가 */
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+        }
+
+        .genre-header p {
+            font-size: 1.2rem; /* 설명 텍스트 크기 증가 */
+            color: #666;
+        }
+
+        .genre-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* 카드 최소 너비 증가 */
+            gap: 3rem; /* 그리드 간격 증가 */
+        }
+
+        .genre-card {
+            background: white;
+            border-radius: 20px; /* 카드 모서리 둥글기 증가 */
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+
+        .genre-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .genre-card img {
+            width: 100%;
+            height: 200px; /* 이미지 높이 증가 */
+            object-fit: cover;
+        }
+
+        .genre-card-content {
+            padding: 2rem; /* 카드 내부 패딩 증가 */
+        }
+
+        .genre-card h3 {
+            font-size: 1.5rem; /* 카드 제목 크기 증가 */
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .genre-card p {
+            color: #666;
+            font-size: 1.1rem; /* 카드 설명 텍스트 크기 증가 */
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+
+        .genre-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #eee;
+        }
+
+        .genre-stats span {
+            color: #4a90e2;
+            font-size: 1.1rem; /* 통계 텍스트 크기 증가 */
+        }
+
+        /* 새로운 기능: 장르 태그 추가 */
+        .genre-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .genre-tag {
+            background-color: #f0f4f8;
+            color: #4a90e2;
+            padding: 0.4rem 1rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem; /* 푸터 패딩 증가 */
+            background: linear-gradient(135deg, #6e8efb, #4a90e2);
+            color: white;
+            margin-top: 6rem; /* 푸터 상단 마진 증가 */
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 1200px) {
+            .genre-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .genre-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            nav ul {
+                gap: 1rem;
+            }
+
+            .genre-container {
+                padding: 0 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index_hihaa03.html">홈</a></li>
+            <li><a href="genres.html">장르별</a></li>
+            <li><a href="new_reviews.html">신작리뷰</a></li>
+            <li><a href="best_reviews.html">베스트리뷰</a></li>
+            <li><a href="community.html">커뮤니티</a></li>
+        </ul>
+        <a href="로그인페이지.html" class="login-button">로그인</a>
+    </nav>
+
+    <div class="genre-container">
+        <div class="genre-header">
+            <h1>장르별 웹소설</h1>
+            <p>취향에 맞는 장르를 선택해보세요</p>
+        </div>
+
+        <div class="genre-grid">
+            <div class="genre-card">
+                <img src="/api/placeholder/300/200" alt="판타지">
+                <div class="genre-card-content">
+                    <h3>판타지</h3>
+                    <p>마법과 모험이 가득한 판타지 세계로의 여행. 신비로운 마법, 영웅적인 모험, 그리고 상상을 초월하는 이야기를 만나보세요.</p>
+                    <div class="genre-tags">
+                        <span class="genre-tag">하이 판타지</span>
+                        <span class="genre-tag">다크 판타지</span>
+                        <span class="genre-tag">현대 판타지</span>
+                    </div>
+                    <div class="genre-stats">
+                        <span>작품 수: 1,234</span>
+                        <span>리뷰 수: 5,678</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="genre-card">
+                <img src="/api/placeholder/300/200" alt="로맨스">
+                <div class="genre-card-content">
+                    <h3>로맨스</h3>
+                    <p>달콤한 사랑과 설렘이 가득한 로맨스. 현실적인 연애부터 판타지적 요소가 가미된 로맨스까지, 다양한 사랑의 형태를 만나보세요.</p>
+                    <div class="genre-tags">
+                        <span class="genre-tag">현대 로맨스</span>
+                        <span class="genre-tag">로맨스 판타지</span>
+                        <span class="genre-tag">시대물</span>
+                    </div>
+                    <div class="genre-stats">
+                        <span>작품 수: 2,345</span>
+                        <span>리뷰 수: 8,901</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="genre-card">
+                <img src="/api/placeholder/300/200" alt="무협">
+                <div class="genre-card-content">
+                    <h3>무협</h3>
+                    <p>강호를 누비는 무협 세계의 이야기. 무술과 협객의 세계, 정의와 의리, 그리고 파란만장한 모험을 경험해보세요.</p>
+                    <div class="genre-tags">
+                        <span class="genre-tag">정통 무협</span>
+                        <span class="genre-tag">현대 무협</span>
+                        <span class="genre-tag">신무협</span>
+                    </div>
+                    <div class="genre-stats">
+                        <span>작품 수: 987</span>
+                        <span>리뷰 수: 3,456</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="genre-card">
+                <img src="/api/placeholder/300/200" alt="라이트노벨">
+                <div class="genre-card-content">
+                    <h3>라이트노벨</h3>
+                    <p>일본 문화의 영향을 받은 가벼운 소설. 학원물부터 이세계 모험까지, 다채로운 소재와 캐릭터들의 이야기를 즐겨보세요.</p>
+                    <div class="genre-tags">
+                        <span class="genre-tag">학원물</span>
+                        <span class="genre-tag">이세계</span>
+                        <span class="genre-tag">일상물</span>
+                    </div>
+                    <div class="genre-stats">
+                        <span>작품 수: 567</span>
+                        <span>리뷰 수: 2,345</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        © 2024 웹소설 리뷰 커뮤니티. All rights reserved.
+    </footer>
+
+    <script>
+        function goToLoginPage() {
+            window.location.href = '로그인페이지.html';
+        }
+    </script>
+</body>
+</html>

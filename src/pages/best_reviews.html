@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>베스트리뷰 - 웹소설 리뷰 커뮤니티</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            line-height: 1.6;
+            background-color: #f0f2f5;
+            color: #333;
+            padding-top: 60px;
+        }
+
+        /* 네비게이션 바 */
+        nav {
+            background: linear-gradient(135deg, #6e8efb, #4a90e2);
+            padding: 1rem 3rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 3rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            padding: 0.5rem 1.5rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            font-size: 1.1rem;
+        }
+
+        nav a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .login-button {
+            background-color: white;
+            color: #4a90e2;
+            padding: 0.5rem 2rem;
+            border-radius: 25px;
+            text-decoration: none;
+            transition: transform 0.3s;
+            font-size: 1.1rem;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        /* 베스트리뷰 페이지 스타일 */
+        .best-reviews-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 3rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 4rem;
+            padding: 2rem 0;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        /* 기간 선택 섹션 */
+        .period-selector {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .period-button {
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 25px;
+            background: white;
+            color: #4a90e2;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .period-button.active {
+            background: #4a90e2;
+            color: white;
+        }
+
+        /* 베스트 리뷰 카드 */
+        .best-review-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        .best-review-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            position: relative;
+        }
+
+        .best-review-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .rank-badge {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #4a90e2;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+
+        .card-content {
+            padding: 2rem;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-stats {
+            display: flex;
+            gap: 1rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .card-stats span {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .card-excerpt {
+            color: #666;
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+        }
+
+        .card-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .card-tag {
+            background: #f0f2f5;
+            padding: 0.4rem 1rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            color: #4a90e2;
+        }
+
+        .rating {
+            color: #ffd700;
+            font-size: 1.2rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem;
+            background: linear-gradient(135deg, #6e8efb, #4a90e2);
+            color: white;
+            margin-top: 4rem;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 1200px) {
+            .best-review-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .best-reviews-container {
+                padding: 0 1rem;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .period-selector {
+                flex-wrap: wrap;
+            }
+
+            .card-content {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index_hihaa03.html">홈</a></li>
+            <li><a href="genres.html">장르별</a></li>
+            <li><a href="new_reviews.html">신작리뷰</a></li>
+            <li><a href="best_reviews.html">베스트리뷰</a></li>
+            <li><a href="community.html">커뮤니티</a></li>
+        </ul>
+        <a href="로그인페이지.html" class="login-button">로그인</a>
+    </nav>
+
+    <div class="best-reviews-container">
+        <div class="page-header">
+            <h1>베스트 리뷰</h1>
+            <p>독자들이 선택한 최고의 리뷰를 만나보세요</p>
+        </div>
+
+        <div class="period-selector">
+            <button class="period-button active">오늘</button>
+            <button class="period-button">이번 주</button>
+            <button class="period-button">이번 달</button>
+            <button class="period-button">전체</button>
+        </div>
+
+        <div class="best-review-grid">
+            <div class="best-review-card">
+                <div class="rank-badge">1</div>
+                <img src="/api/placeholder/600/300" alt="웹소설 표지" class="card-image">
+                <div class="card-content">
+                    <div class="card-meta">
+                        <div class="card-stats">
+                            <span>👁️ 1,234</span>
+                            <span>💬 89</span>
+                            <span>❤️ 567</span>
+                        </div>
+                        <div class="rating">★★★★★</div>
+                    </div>
+                    <h2 class="card-title">백 년 만에 귀환한 검성</h2>
+                    <p class="card-excerpt">
+                        탄탄한 세계관과 치밀한 스토리 구성이 돋보이는 작품. 
+                        주인공의 성장 과정과 감정선이 너무나 생생하게 그려져 있어 
+                        몰입감이 최고조에 달했다...
+                    </p>
+                    <div class="card-tags">
+                        <span class="card-tag">판타지</span>
+                        <span class="card-tag">무협</span>
+                        <span class="card-tag">베스트셀러</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="best-review-card">
+                <div class="rank-badge">2</div>
+                <img src="/api/placeholder/600/300" alt="웹소설 표지" class="card-image">
+                <div class="card-content">
+                    <div class="card-meta">
+                        <div class="card-stats">
+                            <span>👁️ 998</span>
+                            <span>💬 76</span>
+                            <span>❤️ 432</span>
+                        </div>
+                        <div class="rating">★★★★★</div>
+                    </div>
+                    <h2 class="card-title">AI와 함께하는 로맨스</h2>
+                    <p class="card-excerpt">
+                        현대 과학기술과 로맨스를 절묘하게 버무린 신선한 작품. 
+                        인공지능과 인간의 교감을 다루는 방식이 참신하면서도 
+                        따뜻한 감성이 잘 살아있다...
+                    </p>
+                    <div class="card-tags">
+                        <span class="card-tag">로맨스</span>
+                        <span class="card-tag">SF</span>
+                        <span class="card-tag">추천작</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="best-review-card">
+                <div class="rank-badge">3</div>
+                <img src="/api/placeholder/600/300" alt="웹소설 표지" class="card-image">
+                <div class="card-content">
+                    <div class="card-meta">
+                        <div class="card-stats">
+                            <span>👁️ 876</span>
+                            <span>💬 65</span>
+                            <span>❤️ 389</span>
+                        </div>
+                        <div class="rating">★★★★☆</div>
+                    </div>
+                    <h2 class="card-title">내 동생이 드래곤이었다</h2>
+                    <p class="card-excerpt">
+                        가족애를 판타지적 요소와 잘 버무린 힐링 작품. 
+                        드래곤으로 변한 동생과의 일상을 유쾌하게 그려내면서도 
+                        깊이 있는 감동을 전달한다...
+                    </p>
+                    <div class="card-tags">
+                        <span class="card-tag">판타지</span>
+                        <span class="card-tag">일상</span>
+                        <span class="card-tag">힐링</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="best-review-card">
+                <div class="rank-badge">4</div>
+                <img src="/api/placeholder/600/300" alt="웹소설 표지" class="card-image">
+                <div class="card-content">
+                    <div class="card-meta">
+                        <div class="card-stats">
+                            <span>👁️ 754</span>
+                            <span>💬 54</span>
+                            <span>❤️ 312</span>
+                        </div>
+                        <div class="rating">★★★★☆</div>
+                    </div>
+                    <h2 class="card-title">이세계 편의점 시작했습니다</h2>
+                    <p class="card-excerpt">
+                        현대의 편의점 운영 노하우와 판타지 세계관의 절묘한 조화. 
+                        소소한 일상 속 재미와 감동이 잘 어우러진 수작. 
+                        특히 이세계 주민들과의 교류가 인상적...
+                    </p>
+                    <div class="card-tags">
+                        <span class="card-tag">이세계</span>
+                        <span class="card-tag">일상</span>
+                        <span class="card-tag">성장</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        © 2024 웹소설 리뷰 커뮤니티. All rights reserved.
+    </footer>
+
+    <script>
+        function goToLoginPage() {
+            window.location.href = '로그인페이지.html';
+        }
+
+        // 기간 선택 버튼 활성화 기능
+        const periodButtons = document.querySelectorAll('.period-button');
+        periodButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                periodButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

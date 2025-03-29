@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>커뮤니티 - 웹소설 리뷰 커뮤니티</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            line-height: 1.6;
+            background-color: #f0f2f5;
+            color: #333;
+            padding-top: 60px;
+        }
+
+        /* 네비게이션 바 */
+        nav {
+            background: linear-gradient(135deg, #6e8efb, #4a90e2);
+            padding: 1rem 3rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 3rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            padding: 0.5rem 1.5rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            font-size: 1.1rem;
+        }
+
+        nav a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .login-button {
+            background-color: white;
+            color: #4a90e2;
+            padding: 0.5rem 2rem;
+            border-radius: 25px;
+            text-decoration: none;
+            transition: transform 0.3s;
+            font-size: 1.1rem;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        /* 커뮤니티 페이지 스타일 */
+        .community-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        /* 탭 메뉴 */
+        .tab-menu {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .tab-button {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1rem;
+        }
+
+        .tab-button.active {
+            background: #4a90e2;
+            color: white;
+        }
+
+        /* 게시글 작성 버튼 */
+        .write-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #4a90e2;
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s;
+        }
+
+        .write-button:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+        }
+
+        /* 게시글 목록 */
+        .post-list {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .post-item {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .post-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .post-content {
+            padding: 1.5rem;
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .post-title {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .post-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .post-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .post-author {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .author-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+        }
+
+        .post-stats {
+            display: flex;
+            gap: 1rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .post-tag {
+            background: #f0f2f5;
+            padding: 0.2rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            color: #4a90e2;
+            margin-right: 0.5rem;
+        }
+
+        .post-preview {
+            color: #666;
+            margin: 1rem 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* 인기 키워드 */
+        .trending-keywords {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .trending-keywords h3 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .keyword-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .keyword-item {
+            background: #f0f2f5;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            color: #4a90e2;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .keyword-item:hover {
+            background: #4a90e2;
+            color: white;
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem;
+            background: linear-gradient(135deg, #6e8efb, #4a90e2);
+            color: white;
+            margin-top: 4rem;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .community-container {
+                padding: 0 1rem;
+            }
+
+            .tab-menu {
+                flex-wrap: wrap;
+            }
+
+            .tab-button {
+                flex: 1;
+                min-width: 120px;
+                padding: 0.8rem;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index_hihaa03.html">홈</a></li>
+            <li><a href="genres.html">장르별</a></li>
+            <li><a href="new_reviews.html">신작리뷰</a></li>
+            <li><a href="best_reviews.html">베스트리뷰</a></li>
+            <li><a href="community.html">커뮤니티</a></li>
+        </ul>
+        <a href="로그인페이지.html" class="login-button">로그인</a>
+    </nav>
+
+    <div class="community-container">
+        <div class="page-header">
+            <h1>커뮤니티</h1>
+            <p>웹소설 독자들과 자유롭게 소통하세요</p>
+        </div>
+
+        <div class="trending-keywords">
+            <h3>🔥 인기 키워드</h3>
+            <div class="keyword-list">
+                <span class="keyword-item">#회귀물_추천</span>
+                <span class="keyword-item">#로맨스판타지</span>
+                <span class="keyword-item">#신작소설</span>
+                <span class="keyword-item">#캐릭터분석</span>
+                <span class="keyword-item">#결말해석</span>
+                <span class="keyword-item">#작가인터뷰</span>
+                <span class="keyword-item">#독서모임</span>
+                <span class="keyword-item">#웹소설리뷰</span>
+            </div>
+        </div>
+
+        <div class="tab-menu">
+            <button class="tab-button active">전체글</button>
+            <button class="tab-button">자유게시판</button>
+            <button class="tab-button">작품추천</button>
+            <button class="tab-button">작품토론</button>
+            <button class="tab-button">독서모임</button>
+        </div>
+
+        <button class="write-button" onclick="goToWritePage()">
+            <span>✏️ 글쓰기</span>
+        </button>
+
+        <div class="post-list">
+            <!-- 이미지가 있는 게시물 예시 -->
+            <div class="post-item">
+                <div class="post-content">
+                    <div class="post-header">
+                        <a href="#" class="post-title">[리뷰] 회귀자의 서재 - 독특한 설정과 탄탄한 스토리</a>
+                        <span class="post-tag">작품리뷰</span>
+                    </div>
+                    <img src="/api/placeholder/800/400" alt="리뷰 이미지" class="post-image">
+                    <div class="post-preview">
+                        독특한 설정과 탄탄한 스토리 전개가 인상적인 작품입니다. 
+                        특히 주인공의 성장 과정과 캐릭터 간의 관계 묘사가 뛰어났습니다.
+                        마지막 결말까지 긴장감을 놓을 수 없었네요...
+                    </div>
+                    <div class="post-meta">
+                        <div class="post-author">
+                            <img src="/api/placeholder/24/24" alt="작성자 아바타" class="author-avatar">
+                            <span>book_lover</span>
+                            <span>• 1시간 전</span>
+                        </div>
+                        <div class="post-stats">
+                            <span>👁️ 234</span>
+                            <span>💬 18</span>
+                            <span>❤️ 45</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 일반 게시물 예시 -->
+            <div class="post-item">
+                <div class="post-content">
+                    <div class="post-header">
+                        <a href="#" class="post-title">[토론] 최근 회귀물 트렌드에 대한 생각</a>
+                        <span class="post-tag">작품토론</span>
+                    </div>
+                    <div class="post-preview">
+                        최근 웹소설 시장에서 회귀물이 차지하는 비중이 점점 늘어나고 있습니다.
+                        이러한 트렌드에 대해 어떻게 생각하시나요? 
+                        개인적으로는 다양성 측면에서 우려되는 부분도 있지만...
+                    </div>
+                    <div class="post-meta">
+                        <div class="post-author">
+                            <img src="/api/placeholder/24/24" alt="작성자 아바타" class="author-avatar">
+                            <span>웹소설러</span>
+                            <span>• 2시간 전</span>
+                        </div>
+                        <div class="post-stats">
+                            <span>👁️ 567</span>
+                            <span>💬 89</span>
+                            <span>❤️ 123</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        © 2024 웹소설 리뷰 커뮤니티. All rights reserved.
+    </footer>
+
+    <script>
+        // 탭 메뉴 활성화
+        const tabButtons = document.querySelectorAll('.tab-button');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                filterPosts(button.textContent.trim());
+            });
+        });
+
+        // 게시물 필터링 함수
+        function filterPosts(category) {
+            const posts = document.querySelectorAll('.post-item');
+            posts.forEach(post => {
+                const postCategory = post.querySelector('.post-tag').textContent;
+                if (category === '전체글' || postCategory === category) {
+                    post.style.display = 'block';
+                } else {
+                    post.style.display = 'none';
+                }
+            });
+        }
+
+        // 인기 키워드 클릭 이벤트
+        const keywords = document.querySelectorAll('.keyword-item');
+        keywords.forEach(keyword => {
+            keyword.addEventListener('click', () => {
+                const searchTerm = keyword.textContent.replace('#', '');
+                // 검색 기능 구현
+                console.log('Searching for:', searchTerm);
+            });
+        });
+
+        // 글쓰기 페이지로 이동
+        function goToWritePage() {
+            // 로그인 상태 체크
+            const isLoggedIn = checkLoginStatus(); // 실제 구현 필요
+            
+            if (isLoggedIn) {
+                window.location.href = 'post-upload.html';
+            } else {
+                alert('로그인이 필요한 서비스입니다.');
+                window.location.href = '로그인페이지.html';
+            }
+        }
+
+        // 로그인 상태 체크 함수 (예시)
+        function checkLoginStatus() {
+            // 실제 구현에서는 세션/토큰 체크 로직 필요
+            return false; // 테스트를 위해 항상 false 반환
+        }
+
+        // 게시물 상세보기
+        document.querySelectorAll('.post-title').forEach(title => {
+            title.addEventListener('click', (e) => {
+                e.preventDefault();
+                const postId = title.closest('.post-item').dataset.postId;
+                // 실제 구현시 postId를 사용하여 상세 페이지로 이동
+                console.log('Viewing post:', postId);
+            });
+        });
+
+        // 좋아요 기능
+        document.querySelectorAll('.post-stats').forEach(stats => {
+            const likeButton = stats.querySelector('span:last-child');
+            likeButton.addEventListener('click', () => {
+                if (checkLoginStatus()) {
+                    // 좋아요 토글 로직
+                    console.log('Like toggled');
+                } else {
+                    alert('로그인이 필요한 서비스입니다.');
+                }
+            });
+        });
+    </script>
