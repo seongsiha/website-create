@@ -1,0 +1,25 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      // 읽기는 모든 사용자 허용
+      allow read: if true;
+      
+      // 쓰기는 로그인한 사용자만 허용
+      allow write: if request.auth != null;
+      
+      // 특정 폴더는 추가 제한 가능
+      match /profiles/{userId} {
+        // 자신의 프로필 이미지만 수정 가능
+        allow write: if request.auth.uid == userId;
+      }
+      
+      match /reviews/{reviewId} {
+        // 리뷰 작성자만 이미지 업로드 가능
+        allow write: if request.auth != null 
+          && exists(/databases/$(database)/documents/reviews/$(reviewId))
+          && get(/databases/$(database)/documents/reviews/$(reviewId)).data.authorId == request.auth.uid;
+      }
+    }
+  }
+} 
