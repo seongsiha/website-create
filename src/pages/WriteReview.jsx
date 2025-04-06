@@ -22,6 +22,7 @@ const WriteReview = () => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (!user) {
+        alert('리뷰 작성을 위해서는 로그인이 필요합니다.');
         navigate('/login');
       }
     });
