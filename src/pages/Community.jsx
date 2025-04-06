@@ -72,7 +72,12 @@ const Community = () => {
 
       <div className="posts-grid">
         {posts.map(post => (
-          <article key={post.id} className="post-card">
+          <article 
+            key={post.id} 
+            className="post-card"
+            onClick={() => navigate(`/community/post/${post.id}`)}
+            style={{ cursor: 'pointer' }}
+          >
             {post.thumbnail && (
               <div className="post-thumbnail">
                 <img src={post.thumbnail} alt={post.title} />
@@ -90,7 +95,9 @@ const Community = () => {
               <div className="post-meta">
                 <span className="post-author">{post.author}</span>
                 <span className="post-time">
-                  {post.createdAt ? new Date(post.createdAt.toDate()).toLocaleDateString() : '날짜 없음'}
+                  {post.createdAt?.toDate ? post.createdAt.toDate().toLocaleDateString() : 
+                   post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 
+                   '날짜 없음'}
                 </span>
               </div>
               <div className="post-stats">

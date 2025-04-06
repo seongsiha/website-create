@@ -8,6 +8,10 @@ import {
   getDocs,
   where,
   addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  increment,
   serverTimestamp 
 } from 'firebase/firestore';
 
@@ -37,12 +41,20 @@ export const postTagsCollection = collection(db, 'postTags');
 // 댓글 컬렉션
 export const commentsCollection = collection(db, 'comments');
 
+// 좋아요 컬렉션
+export const likesCollection = collection(db, 'likes');
+
 // Firestore 함수들 export
 export { 
+  collection,
   query, 
   orderBy, 
   getDocs, 
   where, 
   addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  increment,
   serverTimestamp 
 }; 
