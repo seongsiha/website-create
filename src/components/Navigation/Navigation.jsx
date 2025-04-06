@@ -34,7 +34,7 @@ const Navigation = () => {
     <nav className="nav">
       <div className="nav-content">
         <Link to="/" className="nav-logo">
-          📚 웹소설리뷰
+          📚 웹소리
         </Link>
 
         <button className="nav-toggle" onClick={toggleMenu} aria-label="메뉴 열기">

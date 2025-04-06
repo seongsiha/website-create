@@ -7,6 +7,7 @@ import Filters from './components/Filters/Filters';
 import FeaturedReviews from './components/FeaturedReviews/FeaturedReviews';
 import Footer from './components/Footer/Footer';
 import Home from './pages/Home';
+import WritePost from './pages/WritePost';
 
 // 코드 스플리팅 적용
 const Login = React.lazy(() => import('./pages/Login'));
@@ -33,6 +34,7 @@ function App() {
             <Route path="/best-reviews" element={<BestReviews />} />
             <Route path="/genres" element={<Genres />} />
             <Route path="/community" element={<Community />} />
+            <Route path="/community/write" element={<WritePost />} />
             <Route path="/new-reviews" element={<NewReviews />} />
             <Route path="/post/upload" element={<PostUpload />} />
             <Route path="/review/write" element={<ReviewForm />} />
