@@ -15,7 +15,7 @@ import {
   doc,
   increment,
   serverTimestamp,
-  collection
+  getDoc
 } from '../firebase/config';
 import './PostDetail.css';
 
@@ -25,9 +25,13 @@ const PostDetail = () => {
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
+  const [editingComment, setEditingComment] = useState(null);
+  const [editCommentContent, setEditCommentContent] = useState('');
   const [isLiked, setIsLiked] = useState(false);
   const [loading, setLoading] = useState(true);
   const viewIncrementedRef = useRef(false);
+  const [isAuthor, setIsAuthor] = useState(false);
+  const [error, setError] = useState(null);
 
   // 날짜 포맷 함수
   const formatDate = (timestamp) => {
@@ -45,42 +49,28 @@ const PostDetail = () => {
   useEffect(() => {
     const loadPost = async () => {
       try {
-        const postDoc = doc(db, 'posts', postId);
-        const postSnapshot = await getDocs(query(postsCollection, where('__name__', '==', postId)));
-        
-        if (!postSnapshot.empty) {
-          const postData = {
-            id: postSnapshot.docs[0].id,
-            ...postSnapshot.docs[0].data()
-          };
-
-          // 조회수 증가
-          const newViews = (postData.views || 0) + 1;
-          await updateDoc(postDoc, {
-            views: newViews
-          });
+        const postDoc = await getDoc(doc(db, 'posts', postId));
+        if (postDoc.exists()) {
+          const postData = postDoc.data();
+          setPost(postData);
+          setIsAuthor(
+            (postData.userId && postData.userId === auth.currentUser?.uid) ||
+            (postData.author === auth.currentUser?.email)
+          );
           
-          // 업데이트된 조회수를 포함하여 게시글 데이터 설정
-          setPost({
-            ...postData,
-            views: newViews
-          });
-
-          // 좋아요 상태 확인
-          if (auth.currentUser) {
-            const likeQuery = query(
-              likesCollection,
-              where('postId', '==', postId),
-              where('userId', '==', auth.currentUser.uid)
-            );
-            const likeSnapshot = await getDocs(likeQuery);
-            setIsLiked(!likeSnapshot.empty);
+          if (!viewIncrementedRef.current) {
+            await updateDoc(doc(db, 'posts', postId), {
+              viewCount: increment(1),
+            });
+            viewIncrementedRef.current = true;
           }
         } else {
           navigate('/community');
         }
-      } catch (error) {
-        console.error('게시글 로드 실패:', error);
+      } catch (err) {
+        setError('게시글을 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -103,8 +93,6 @@ const PostDetail = () => {
         setComments(commentsData);
       } catch (error) {
         console.error('댓글 로드 실패:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -196,6 +184,65 @@ const PostDetail = () => {
     }
   };
 
+  const handleDeletePost = async () => {
+    if (window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
+      try {
+        await deleteDoc(doc(db, 'posts', postId));
+        navigate('/community');
+      } catch (err) {
+        setError('게시글 삭제 중 오류가 발생했습니다.');
+      }
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
+      try {
+        await deleteDoc(doc(db, 'comments', commentId));
+        setComments(comments.filter(comment => comment.id !== commentId));
+        await updateDoc(doc(db, 'posts', postId), {
+          commentCount: increment(-1),
+        });
+      } catch (err) {
+        setError('댓글 삭제 중 오류가 발생했습니다.');
+      }
+    }
+  };
+
+  const handleEditComment = async (commentId) => {
+    try {
+      if (!editCommentContent.trim()) {
+        alert('댓글 내용을 입력해주세요.');
+        return;
+      }
+
+      await updateDoc(doc(db, 'comments', commentId), {
+        content: editCommentContent.trim(),
+        updatedAt: serverTimestamp()
+      });
+
+      setComments(comments.map(comment => 
+        comment.id === commentId 
+          ? { ...comment, content: editCommentContent.trim() }
+          : comment
+      ));
+      setEditingComment(null);
+      setEditCommentContent('');
+    } catch (err) {
+      setError('댓글 수정 중 오류가 발생했습니다.');
+    }
+  };
+
+  const startEditingComment = (comment) => {
+    setEditingComment(comment.id);
+    setEditCommentContent(comment.content);
+  };
+
+  const cancelEditingComment = () => {
+    setEditingComment(null);
+    setEditCommentContent('');
+  };
+
   if (loading) {
     return <div className="loading">로딩 중...</div>;
   }
@@ -206,65 +253,118 @@ const PostDetail = () => {
 
   return (
     <div className="post-detail-container">
-      <div className="post-header">
-        <h1>{post.title}</h1>
-        <div className="post-meta">
-          <span className="author">{post.author}</span>
-          <span className="date">
-            {formatDate(post.createdAt)}
-          </span>
-        </div>
-        <div className="post-stats">
-          <span><i className="fas fa-eye"></i> {post.views || 0}</span>
-          <button 
-            className={`like-button ${isLiked ? 'liked' : ''}`}
-            onClick={toggleLike}
-          >
-            <i className="fas fa-heart"></i> {post.likes || 0}
-          </button>
-          <span><i className="fas fa-comment"></i> {comments.length}</span>
-        </div>
-      </div>
-
-      <div className="post-content">
-        {post.content}
-      </div>
-
-      {post.tags && post.tags.length > 0 && (
-        <div className="post-tags">
-          {post.tags.map((tag, index) => (
-            <span key={index} className="tag">#{tag}</span>
-          ))}
-        </div>
-      )}
-
-      <div className="comments-section">
-        <h2>댓글 {comments.length}개</h2>
-        
-        <form onSubmit={handleCommentSubmit} className="comment-form">
-          <textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="댓글을 작성하세요"
-            rows={3}
-          />
-          <button type="submit">댓글 작성</button>
-        </form>
-
-        <div className="comments-list">
-          {comments.map(comment => (
-            <div key={comment.id} className="comment">
-              <div className="comment-header">
-                <span className="comment-author">{comment.author}</span>
-                <span className="comment-date">
-                  {formatDate(comment.createdAt)}
-                </span>
+      {loading ? (
+        <div className="loading">로딩 중...</div>
+      ) : error ? (
+        <div className="error">{error}</div>
+      ) : (
+        <>
+          <div className="post-header">
+            <h1>{post.title}</h1>
+            {isAuthor && (
+              <div className="post-actions">
+                <button onClick={() => navigate(`/community/post/${postId}/edit`)} className="edit-button">
+                  수정
+                </button>
+                <button onClick={handleDeletePost} className="delete-button">
+                  삭제
+                </button>
               </div>
-              <div className="comment-content">{comment.content}</div>
+            )}
+            <div className="post-meta">
+              <span className="author">{post.author}</span>
+              <span className="date">
+                {formatDate(post.createdAt)}
+              </span>
             </div>
-          ))}
-        </div>
-      </div>
+            <div className="post-stats">
+              <span><i className="fas fa-eye"></i> {post.views || 0}</span>
+              <button 
+                className={`like-button ${isLiked ? 'liked' : ''}`}
+                onClick={toggleLike}
+              >
+                <i className="fas fa-heart"></i> {post.likes || 0}
+              </button>
+              <span><i className="fas fa-comment"></i> {comments.length}</span>
+            </div>
+          </div>
+
+          <div className="post-content">
+            {post.content}
+          </div>
+
+          {post.tags && post.tags.length > 0 && (
+            <div className="post-tags">
+              {post.tags.map((tag, index) => (
+                <span key={index} className="tag">#{tag}</span>
+              ))}
+            </div>
+          )}
+
+          <div className="comments-section">
+            <h2>댓글 {comments.length}개</h2>
+            
+            <form onSubmit={handleCommentSubmit} className="comment-form">
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="댓글을 작성하세요"
+                rows={3}
+              />
+              <button type="submit">댓글 작성</button>
+            </form>
+
+            <div className="comments-list">
+              {comments.map(comment => (
+                <div key={comment.id} className="comment">
+                  <div className="comment-header">
+                    <span className="comment-author">{comment.author}</span>
+                    <span className="comment-date">
+                      {formatDate(comment.createdAt)}
+                      {comment.updatedAt && ' (수정됨)'}
+                    </span>
+                    {comment.author === auth.currentUser?.email && (
+                      <div className="comment-actions">
+                        {editingComment === comment.id ? (
+                          <>
+                            <button onClick={() => handleEditComment(comment.id)} className="save-button">
+                              저장
+                            </button>
+                            <button onClick={cancelEditingComment} className="cancel-button">
+                              취소
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={() => startEditingComment(comment)} className="edit-button">
+                              수정
+                            </button>
+                            <button onClick={() => handleDeleteComment(comment.id)} className="delete-button">
+                              삭제
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="comment-content">
+                    {editingComment === comment.id ? (
+                      <textarea
+                        value={editCommentContent}
+                        onChange={(e) => setEditCommentContent(e.target.value)}
+                        className="edit-comment-textarea"
+                        rows={3}
+                      />
+                    ) : (
+                      comment.content
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

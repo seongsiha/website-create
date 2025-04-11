@@ -157,6 +157,26 @@
   background-color: #c82333;
 }
 
+.profile-link {
+  color: #333;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.profile-link:hover {
+  background-color: #f0f0f0;
+}
+
+.profile-link i {
+  font-size: 16px;
+}
+
 @media (max-width: 768px) {
   .nav-toggle {
     display: block;
@@ -208,6 +228,12 @@
   .logout-button {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
+  }
+
+  .profile-link {
+    padding: 8px;
+    font-size: 14px;
+    white-space: nowrap;
   }
 
   .nav-toggle.active span:nth-child(1) {

@@ -4,7 +4,8 @@ import {
   addDoc, 
   getDocs, 
   query, 
-  where 
+  where,
+  serverTimestamp 
 } from '../../firebase/config';
 import './TagInput.css';
 
@@ -15,17 +16,22 @@ const TagInput = ({ selectedTags, setSelectedTags }) => {
   useEffect(() => {
     const fetchTags = async () => {
       if (inputValue.length > 0) {
-        const q = query(
-          tagsCollection, 
-          where('name', '>=', inputValue), 
-          where('name', '<=', inputValue + '\uf8ff')
-        );
-        const querySnapshot = await getDocs(q);
-        const tags = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setSuggestedTags(tags);
+        try {
+          const q = query(
+            tagsCollection, 
+            where('tagName', '>=', inputValue.toLowerCase()), 
+            where('tagName', '<=', inputValue.toLowerCase() + '\uf8ff')
+          );
+          const querySnapshot = await getDocs(q);
+          const tags = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          setSuggestedTags(tags);
+        } catch (error) {
+          console.error('태그 검색 중 오류:', error);
+          setSuggestedTags([]);
+        }
       } else {
         setSuggestedTags([]);
       }
@@ -41,25 +47,31 @@ const TagInput = ({ selectedTags, setSelectedTags }) => {
   const handleKeyDown = async (e) => {
     if (e.key === 'Enter' && inputValue.trim()) {
       e.preventDefault();
-      const newTag = inputValue.trim();
+      const newTag = inputValue.trim().toLowerCase();
       
       if (!selectedTags.includes(newTag)) {
-        // 태그가 존재하는지 확인
-        const q = query(tagsCollection, where('name', '==', newTag));
-        const querySnapshot = await getDocs(q);
-        
-        if (querySnapshot.empty) {
-          // 새로운 태그 생성
-          await addDoc(tagsCollection, {
-            name: newTag,
-            count: 1,
-            createdAt: new Date()
-          });
+        try {
+          // 태그가 존재하는지 확인
+          const q = query(tagsCollection, where('tagName', '==', newTag));
+          const querySnapshot = await getDocs(q);
+          
+          if (querySnapshot.empty) {
+            // 새로운 태그 생성
+            await addDoc(tagsCollection, {
+              tagName: newTag,
+              count: 1,
+              createdAt: serverTimestamp()
+            });
+          }
+          
+          setSelectedTags([...selectedTags, newTag]);
+          setInputValue('');
+        } catch (error) {
+          console.error('태그 생성 중 오류:', error);
         }
-        
-        setSelectedTags([...selectedTags, newTag]);
+      } else {
+        setInputValue('');
       }
-      setInputValue('');
     }
   };
 
@@ -70,7 +82,7 @@ const TagInput = ({ selectedTags, setSelectedTags }) => {
   return (
     <div className="tag-input-container">
       <div className="selected-tags">
-        {selectedTags.map((tag, index) => (
+        {selectedTags && selectedTags.map((tag, index) => (
           <span key={index} className="tag">
             {tag}
             <button onClick={() => removeTag(tag)} className="remove-tag">×</button>
@@ -92,13 +104,13 @@ const TagInput = ({ selectedTags, setSelectedTags }) => {
               key={index}
               className="suggested-tag"
               onClick={() => {
-                if (!selectedTags.includes(tag.name)) {
-                  setSelectedTags([...selectedTags, tag.name]);
+                if (!selectedTags.includes(tag.tagName)) {
+                  setSelectedTags([...selectedTags, tag.tagName]);
                 }
                 setInputValue('');
               }}
             >
-              {tag.name}
+              {tag.tagName}
             </button>
           ))}
         </div>

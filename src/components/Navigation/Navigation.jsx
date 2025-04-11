@@ -34,7 +34,7 @@ const Navigation = () => {
     <nav className="nav">
       <div className="nav-content">
         <Link to="/" className="nav-logo">
-          📚 웹소리
+          📚 웹소리(웹소설 리뷰 사이트)
         </Link>
 
         <button className="nav-toggle" onClick={toggleMenu} aria-label="메뉴 열기">
@@ -68,7 +68,12 @@ const Navigation = () => {
           {user ? (
             <div className="user-section">
               <span className="user-email">{user.email}</span>
-              <button onClick={handleLogout} className="logout-button">로그아웃</button>
+              <Link to="/profile" className="profile-link">
+                <i className="fas fa-user"></i> 프로필
+              </Link>
+              <button onClick={handleLogout} className="logout-button">
+                <i className="fas fa-sign-out-alt"></i> 로그아웃
+              </button>
             </div>
           ) : (
             <div className="auth-buttons">

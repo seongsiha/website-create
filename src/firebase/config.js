@@ -11,9 +11,12 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  getDoc,
+  setDoc,
   increment,
   serverTimestamp 
 } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBMKFWfLrxhnMbxuPBed10KNbv_7VyvKJE",
@@ -26,35 +29,46 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
 // 커뮤니티 게시글 컬렉션
-export const postsCollection = collection(db, 'posts');
+const postsCollection = collection(db, 'posts');
 
 // 태그 컬렉션
-export const tagsCollection = collection(db, 'tags');
+const tagsCollection = collection(db, 'tags');
 
 // 게시글 태그 매핑 컬렉션
-export const postTagsCollection = collection(db, 'postTags');
+const postTagsCollection = collection(db, 'postTags');
 
 // 댓글 컬렉션
-export const commentsCollection = collection(db, 'comments');
+const commentsCollection = collection(db, 'comments');
 
 // 좋아요 컬렉션
-export const likesCollection = collection(db, 'likes');
+const likesCollection = collection(db, 'likes');
 
-// Firestore 함수들 export
-export { 
+// 모든 export를 하나로 통합
+export {
+  auth,
+  db,
+  storage,
   collection,
-  query, 
-  orderBy, 
-  getDocs, 
-  where, 
+  query,
+  orderBy,
+  getDocs,
+  where,
   addDoc,
   updateDoc,
   deleteDoc,
   doc,
+  getDoc,
+  setDoc,
   increment,
-  serverTimestamp 
+  serverTimestamp,
+  postsCollection,
+  tagsCollection,
+  postTagsCollection,
+  commentsCollection,
+  likesCollection
 }; 

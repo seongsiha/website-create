@@ -36,6 +36,7 @@ const WritePost = () => {
         category,
         tags: selectedTags,
         author: auth.currentUser.email,
+        userId: auth.currentUser.uid,
         createdAt: serverTimestamp(),
         views: 0,
         likes: 0,

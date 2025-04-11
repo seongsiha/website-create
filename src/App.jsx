@@ -9,6 +9,9 @@ import Footer from './components/Footer/Footer';
 import Home from './pages/Home';
 import WritePost from './pages/WritePost';
 import PostDetail from './pages/PostDetail';
+import ChangePassword from './pages/ChangePassword';
+import Profile from './pages/Profile';
+import EditPost from './pages/EditPost';
 
 // 코드 스플리팅 적용
 const Login = React.lazy(() => import('./pages/Login'));
@@ -37,9 +40,12 @@ function App() {
             <Route path="/community" element={<Community />} />
             <Route path="/community/write" element={<WritePost />} />
             <Route path="/community/post/:postId" element={<PostDetail />} />
+            <Route path="/community/post/:postId/edit" element={<EditPost />} />
             <Route path="/new-reviews" element={<NewReviews />} />
             <Route path="/post/upload" element={<PostUpload />} />
             <Route path="/review/write" element={<ReviewForm />} />
+            <Route path="/change-password" element={<ChangePassword />} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </Suspense>
         <Footer />
