@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
-import { auth, db } from '../firebase/config';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth, db, storage } from '../firebase/config';
 import './WriteReview.css';
 
 const WriteReview = () => {
@@ -13,11 +14,14 @@ const WriteReview = () => {
     rating: 5,
     content: '',
     genre: '판타지',
-    tags: []
+    tags: [],
+    images: [],
+    imageFiles: []
   });
   const [tagInput, setTagInput] = useState('');
   const [suggestedTags, setSuggestedTags] = useState([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -81,6 +85,85 @@ const WriteReview = () => {
     }
   };
 
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 5) {
+      setError('이미지는 최대 5개까지 업로드할 수 있습니다.');
+      return;
+    }
+    
+    // 파일 크기 체크 (각 파일 최대 5MB)
+    const oversizedFiles = files.filter(file => file.size > 5 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      setError('각 이미지의 크기는 5MB를 초과할 수 없습니다.');
+      return;
+    }
+
+    // 이미지 타입 체크
+    const invalidFiles = files.filter(file => !file.type.startsWith('image/'));
+    if (invalidFiles.length > 0) {
+      setError('이미지 파일만 업로드할 수 있습니다.');
+      return;
+    }
+    
+    // 이미지 미리보기 생성
+    const imageUrls = files.map(file => URL.createObjectURL(file));
+    setReviewData(prev => ({
+      ...prev,
+      images: [...prev.images, ...imageUrls],
+      imageFiles: [...prev.imageFiles, ...files]
+    }));
+    setError('');
+  };
+
+  const removeImage = (index) => {
+    URL.revokeObjectURL(reviewData.images[index]); // 메모리 해제
+    setReviewData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+      imageFiles: prev.imageFiles.filter((_, i) => i !== index)
+    }));
+  };
+
+  const uploadImages = async () => {
+    if (!auth.currentUser) throw new Error('로그인이 필요합니다.');
+    
+    try {
+      const uploadPromises = reviewData.imageFiles.map(async (file) => {
+        try {
+          // 파일명에서 특수문자 제거 및 타임스탬프 추가
+          const safeFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+          const fileName = `${Date.now()}_${safeFileName}`;
+          
+          // 경로를 reviews/{userId}/{fileName} 형식으로 통일
+          const storageRef = ref(storage, `reviews/${auth.currentUser.uid}/${fileName}`);
+          
+          // 이미지 업로드 전 파일 타입 체크
+          if (!file.type.startsWith('image/')) {
+            throw new Error('이미지 파일만 업로드할 수 있습니다.');
+          }
+
+          // 파일 크기 체크 (5MB)
+          if (file.size > 5 * 1024 * 1024) {
+            throw new Error('파일 크기는 5MB를 초과할 수 없습니다.');
+          }
+
+          const snapshot = await uploadBytes(storageRef, file);
+          const downloadURL = await getDownloadURL(snapshot.ref);
+          return downloadURL;
+        } catch (error) {
+          console.error(`이미지 업로드 실패: ${file.name}`, error);
+          throw new Error(`이미지 업로드 중 오류가 발생했습니다: ${file.name}`);
+        }
+      });
+
+      return Promise.all(uploadPromises);
+    } catch (error) {
+      console.error('이미지 업로드 실패:', error);
+      throw new Error('이미지 업로드 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -92,8 +175,34 @@ const WriteReview = () => {
         throw new Error('로그인이 필요합니다.');
       }
 
+      // 입력 검증
+      if (!reviewData.title.trim()) {
+        throw new Error('리뷰 제목을 입력해주세요.');
+      }
+      if (!reviewData.novelTitle.trim()) {
+        throw new Error('작품 제목을 입력해주세요.');
+      }
+      if (!reviewData.content.trim()) {
+        throw new Error('리뷰 내용을 입력해주세요.');
+      }
+
+      let imageUrls = [];
+      if (reviewData.imageFiles.length > 0) {
+        try {
+          imageUrls = await uploadImages();
+        } catch (error) {
+          throw new Error('이미지 업로드 중 오류가 발생했습니다. 다시 시도해주세요.');
+        }
+      }
+
       const reviewDataToSave = {
-        ...reviewData,
+        title: reviewData.title.trim(),
+        novelTitle: reviewData.novelTitle.trim(),
+        content: reviewData.content.trim(),
+        rating: Number(reviewData.rating),
+        genre: reviewData.genre,
+        tags: reviewData.tags,
+        images: imageUrls,
         userId: user.uid,
         userEmail: user.email,
         createdAt: serverTimestamp(),
@@ -103,30 +212,16 @@ const WriteReview = () => {
       };
 
       // 리뷰 저장
-      const docRef = await addDoc(collection(db, 'reviews'), reviewDataToSave);
+      await addDoc(collection(db, 'reviews'), reviewDataToSave);
       
-      // 태그 통계 업데이트
-      for (const tag of reviewData.tags) {
-        const tagsRef = collection(db, 'tags');
-        const q = query(tagsRef, where('tagName', '==', tag));
-        const querySnapshot = await getDocs(q);
-        
-        if (querySnapshot.empty) {
-          await addDoc(tagsRef, {
-            tagName: tag,
-            count: 1,
-            lastUsed: serverTimestamp()
-          });
-        } else {
-          // 태그 카운트 업데이트는 나중에 구현
-        }
-      }
-
+      // 이미지 미리보기 URL 정리
+      reviewData.images.forEach(url => URL.revokeObjectURL(url));
+      
       alert('리뷰가 성공적으로 작성되었습니다!');
-      navigate('/');
+      navigate('/reviews');
     } catch (error) {
       console.error('리뷰 작성 중 오류 발생:', error);
-      setError('리뷰 작성 중 오류가 발생했습니다. 다시 시도해주세요.');
+      setError(error.message || '리뷰 작성 중 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setIsSubmitting(false);
     }
@@ -257,6 +352,34 @@ const WriteReview = () => {
                   ×
                 </button>
               </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="images">이미지 첨부</label>
+          <input
+            type="file"
+            id="images"
+            accept="image/*"
+            multiple
+            onChange={handleImageChange}
+            className="file-input"
+            disabled={isSubmitting || reviewData.images.length >= 5}
+          />
+          <div className="image-preview-container">
+            {reviewData.images.map((url, index) => (
+              <div key={index} className="image-preview">
+                <img src={url} alt={`미리보기 ${index + 1}`} />
+                <button
+                  type="button"
+                  className="remove-image"
+                  onClick={() => removeImage(index)}
+                  disabled={isSubmitting}
+                >
+                  ✕
+                </button>
+              </div>
             ))}
           </div>
         </div>

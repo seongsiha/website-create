@@ -46,13 +46,7 @@ const Navigation = () => {
             <Link to="/" className="nav-link">홈</Link>
           </li>
           <li className="nav-item">
-            <Link to="/genres" className="nav-link">장르별</Link>
-          </li>
-          <li className="nav-item">
-            <Link to="/new-reviews" className="nav-link">신작리뷰</Link>
-          </li>
-          <li className="nav-item">
-            <Link to="/best-reviews" className="nav-link">베스트리뷰</Link>
+            <Link to="/reviews" className="nav-link">리뷰</Link>
           </li>
           <li className="nav-item">
             <Link to="/community" className="nav-link">커뮤니티</Link>
@@ -78,7 +72,7 @@ const Navigation = () => {
           ) : (
             <div className="auth-buttons">
               <Link to="/login" className="login-button">로그인</Link>
-              <Link to="/signup" className="signup-button">회원가입</Link>
+              <Link to="/register" className="signup-button">회원가입</Link>
             </div>
           )}
         </div>

@@ -50,8 +50,8 @@ const likesCollection = collection(db, 'likes');
 
 // 모든 export를 하나로 통합
 export {
-  auth,
   db,
+  auth,
   storage,
   collection,
   query,
@@ -71,4 +71,6 @@ export {
   postTagsCollection,
   commentsCollection,
   likesCollection
-}; 
+};
+
+export default app; 
