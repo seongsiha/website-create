@@ -1,0 +1,316 @@
+.review-detail-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: calc(100vh - 64px); /* 헤더 높이를 고려한 최소 높이 */
+  background-color: #f8f9fa;
+}
+
+.review-detail {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+}
+
+.review-header {
+  margin-bottom: 2rem;
+  position: relative;
+  display: flex;
+  gap: 1.5rem;
+  background-color: #ffffff;
+  border-radius: 8px;
+}
+
+.review-thumbnail {
+  flex-shrink: 0;
+  width: 120px;
+  height: 160px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #f8f9fa;
+}
+
+.review-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.review-header-content {
+  flex-grow: 1;
+}
+
+.review-title {
+  font-size: 1.75rem;
+  margin-bottom: 0.75rem;
+  color: #333;
+  font-weight: bold;
+}
+
+.review-meta {
+  display: flex;
+  gap: 1rem;
+  color: #666;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.review-actions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.edit-button, .delete-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.edit-button {
+  background-color: #4a90e2;
+  color: white;
+}
+
+.edit-button:hover {
+  background-color: #357abd;
+}
+
+.delete-button {
+  background-color: #ff4757;
+  color: white;
+}
+
+.delete-button:hover {
+  background-color: #e03131;
+}
+
+.review-content {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #eef0f2;
+  background-color: #ffffff;
+  border-radius: 8px;
+}
+
+.review-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+  width: 100%;
+}
+
+.review-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
+}
+
+.review-image:hover {
+  transform: scale(1.02);
+}
+
+.review-text {
+  line-height: 1.8;
+  color: #333;
+  white-space: pre-wrap;
+  margin-bottom: 2rem;
+  font-size: 1rem;
+}
+
+.review-footer {
+  border-top: 1px solid #eef0f2;
+  padding-top: 1.5rem;
+  margin-top: 2rem;
+}
+
+.review-stats {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  color: #495057;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.like-button {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #666;
+  transition: all 0.2s ease;
+}
+
+.like-button:hover {
+  color: #ff4757;
+}
+
+.like-button.liked {
+  color: #ff4757;
+}
+
+.share-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.kakao-share-button,
+.share-buttons .SocialMediaShareButton {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.kakao-share-button:hover {
+  background: #ffe033;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.kakao-share-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+  background: url('https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/kakaotalk.svg') no-repeat center/contain;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.error {
+  text-align: center;
+  padding: 2rem;
+  color: #ff4757;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.stars {
+  color: #ffd700;
+  font-size: 1.2rem;
+  letter-spacing: 1px;
+}
+
+.score {
+  font-weight: bold;
+  color: #333;
+}
+
+.count {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tag {
+  background-color: #f1f3f5;
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.85rem;
+  color: #495057;
+}
+
+@media (max-width: 768px) {
+  .review-detail-container {
+    padding: 1rem;
+    background-color: #f8f9fa;
+  }
+
+  .review-detail {
+    padding: 1.5rem;
+    border-radius: 12px;
+  }
+
+  .review-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .review-thumbnail {
+    width: 100px;
+    height: 140px;
+    margin: 0 auto;
+  }
+
+  .review-title {
+    font-size: 1.4rem;
+    text-align: center;
+  }
+
+  .review-meta {
+    justify-content: center;
+  }
+
+  .rating {
+    justify-content: center;
+  }
+
+  .tags {
+    justify-content: center;
+  }
+
+  .share-buttons {
+    position: static;
+    margin-top: 1rem;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .review-actions {
+    flex-direction: column;
+  }
+
+  .review-actions button {
+    width: 100%;
+  }
+
+  .review-images {
+    grid-template-columns: 1fr;
+  }
+  
+  .review-image {
+    height: 250px;
+  }
+} 

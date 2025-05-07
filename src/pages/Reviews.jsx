@@ -1,6 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  collection, 
+  query, 
+  orderBy, 
+  getDocs, 
+  doc, 
+  updateDoc, 
+  increment,
+  where,
+  getDoc,
+  addDoc,
+  deleteDoc
+} from 'firebase/firestore';
+import { db, auth } from '../firebase/config';
 import './Reviews.css';
 
 const Reviews = () => {
@@ -8,26 +21,151 @@ const Reviews = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('최신리뷰');
+  const [likedReviews, setLikedReviews] = useState({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredReviews, setFilteredReviews] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const navigate = useNavigate();
+  const viewIncrementedRef = useRef({});
+
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredReviews(reviews);
+      setIsSearching(false);
+    } else {
+      setIsSearching(true);
+      const filtered = reviews.filter(review => {
+        const titleMatch = review.title?.toLowerCase().includes(searchQuery.toLowerCase());
+        const contentMatch = review.content?.toLowerCase().includes(searchQuery.toLowerCase());
+        const tagMatch = review.tags?.some(tag => 
+          tag.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        return titleMatch || contentMatch || tagMatch;
+      });
+      setFilteredReviews(filtered);
+    }
+  }, [searchQuery, reviews]);
 
   useEffect(() => {
     fetchReviews();
-  }, []);
+    if (auth.currentUser) {
+      fetchLikedReviews();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    setFilteredReviews(reviews);
+  }, [reviews]);
+
+  const fetchLikedReviews = async () => {
+    try {
+      const likesQuery = query(
+        collection(db, 'reviewLikes'),
+        where('userId', '==', auth.currentUser.uid)
+      );
+      const querySnapshot = await getDocs(likesQuery);
+      const likedReviewsData = {};
+      querySnapshot.forEach(doc => {
+        likedReviewsData[doc.data().reviewId] = true;
+      });
+      setLikedReviews(likedReviewsData);
+    } catch (error) {
+      console.error('좋아요 상태 로드 실패:', error);
+    }
+  };
 
   const fetchReviews = async () => {
     try {
       const reviewsRef = collection(db, 'reviews');
       const q = query(reviewsRef, orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
+      
       const reviewsData = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
+      
       setReviews(reviewsData);
+      setFilteredReviews(reviewsData);
       setLoading(false);
-    } catch (err) {
-      console.error('Error fetching reviews:', err);
-      setError('리뷰를 불러오는 중 오류가 발생했습니다.');
+    } catch (error) {
+      console.error('리뷰를 불러오는 중 오류가 발생했습니다:', error);
       setLoading(false);
+    }
+  };
+
+  const handleReviewClick = async (reviewId) => {
+    if (!viewIncrementedRef.current[reviewId]) {
+      try {
+        const reviewRef = doc(db, 'reviews', reviewId);
+        await updateDoc(reviewRef, {
+          views: increment(1)
+        });
+        viewIncrementedRef.current[reviewId] = true;
+        setReviews(prevReviews => 
+          prevReviews.map(review => 
+            review.id === reviewId 
+              ? { ...review, views: (review.views || 0) + 1 }
+              : review
+          )
+        );
+      } catch (error) {
+        console.error('조회수 증가 실패:', error);
+      }
+    }
+    navigate(`/reviews/${reviewId}`);
+  };
+
+  const handleLike = async (reviewId) => {
+    if (!auth.currentUser) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    try {
+      const reviewRef = doc(db, 'reviews', reviewId);
+      const likeQuery = query(
+        collection(db, 'reviewLikes'),
+        where('reviewId', '==', reviewId),
+        where('userId', '==', auth.currentUser.uid)
+      );
+      const likeSnapshot = await getDocs(likeQuery);
+
+      if (likeSnapshot.empty) {
+        // 좋아요 추가
+        await addDoc(collection(db, 'reviewLikes'), {
+          reviewId,
+          userId: auth.currentUser.uid,
+          createdAt: new Date()
+        });
+        await updateDoc(reviewRef, {
+          likes: increment(1)
+        });
+        setLikedReviews(prev => ({ ...prev, [reviewId]: true }));
+        setReviews(prevReviews => 
+          prevReviews.map(review => 
+            review.id === reviewId 
+              ? { ...review, likes: (review.likes || 0) + 1 }
+              : review
+          )
+        );
+      } else {
+        // 좋아요 취소
+        await deleteDoc(likeSnapshot.docs[0].ref);
+        await updateDoc(reviewRef, {
+          likes: increment(-1)
+        });
+        setLikedReviews(prev => ({ ...prev, [reviewId]: false }));
+        setReviews(prevReviews => 
+          prevReviews.map(review => 
+            review.id === reviewId 
+              ? { ...review, likes: (review.likes || 0) - 1 }
+              : review
+          )
+        );
+      }
+    } catch (error) {
+      console.error('좋아요 토글 실패:', error);
     }
   };
 
@@ -40,6 +178,7 @@ const Reviews = () => {
   const handleTabClick = (e, tab) => {
     e.preventDefault();
     setActiveTab(tab);
+    setLoading(true);
   };
 
   const renderRating = (rating, count) => {
@@ -93,11 +232,53 @@ const Reviews = () => {
     );
   };
 
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
   if (loading) return <div className="loading">리뷰를 불러오는 중...</div>;
   if (error) return <div className="error-message">{error}</div>;
 
   return (
     <div className="reviews-container">
+      <div className="search-container">
+        <input
+          type="text"
+          placeholder="제목, 내용, 태그로 검색..."
+          value={searchQuery}
+          onChange={handleSearch}
+          className="search-input"
+        />
+      </div>
+
+      {isSearching && (
+        <div className="search-results-container">
+          <div className="search-results-header">
+            <h3>검색 결과</h3>
+            <span className="search-results-count">"{searchQuery}" 검색 결과: {filteredReviews.length}개</span>
+          </div>
+          <div className="search-results-list">
+            {filteredReviews.map((review) => (
+              <div 
+                key={review.id} 
+                className="search-result-item"
+                onClick={() => handleReviewClick(review.id)}
+              >
+                <div className="search-result-title">{review.title}</div>
+                <div className="search-result-content">
+                  {review.content?.substring(0, 100)}...
+                </div>
+                <div className="search-result-tags">
+                  {review.tags?.map((tag, index) => (
+                    <span key={index} className="tag">{tag}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <nav className="reviews-nav">
         <a 
           href="#" 
@@ -115,57 +296,60 @@ const Reviews = () => {
         </a>
         <a 
           href="#" 
-          className={activeTab === '장르별리뷰' ? 'active' : ''} 
-          onClick={(e) => handleTabClick(e, '장르별리뷰')}
+          className={activeTab === '좋아요순' ? 'active' : ''} 
+          onClick={(e) => handleTabClick(e, '좋아요순')}
         >
-          장르별 리뷰
+          좋아요순
         </a>
       </nav>
 
       <div className="reviews-grid">
-        {reviews.map((review) => {
-          const {
-            id,
-            title = '',
-            content = '',
-            rating = 0,
-            ratingCount = 0,
-            userEmail = '익명',
-            category = '판타지, 현대판타지',
-            createdAt,
-            likes = 0,
-            dislikes = 0
-          } = review;
-
-          return (
-            <div key={id} className="review-card">
-              {renderThumbnail(review)}
-              <div className="review-content">
-                <div className="review-header">
-                  <div className="review-category">{category}</div>
-                  <h2 className="review-title">{title}</h2>
-                  {renderRating(rating, ratingCount)}
+        {filteredReviews.map((review, index) => (
+          <article 
+            key={review.id} 
+            className="review-card"
+            onClick={() => handleReviewClick(review.id)}
+          >
+            {activeTab !== '최신리뷰' && (
+              <div className="rank-badge">
+                {index + 1}위
+              </div>
+            )}
+            {renderThumbnail(review)}
+            <div className="review-content">
+              <h3 className="review-title">{review.title}</h3>
+              <div className="novel-title">작품명: <span>{review.novelTitle}</span></div>
+              {renderRating(review.rating, review.ratingCount)}
+              <div className="review-meta">
+                <div className="review-author">
+                  <span>{review.userEmail || '익명'}</span>
                 </div>
-                <p className="review-text">{content}</p>
-                <div className="review-meta">
-                  <span>{userEmail}</span>
-                  <span>{formatDate(createdAt)}</span>
-                </div>
-                <div className="review-actions">
-                  <button className="review-action">
-                    공감 {likes}
+                <span>{formatDate(review.createdAt)}</span>
+              </div>
+              <div className="tags">
+                {review.tags?.map((tag, index) => (
+                  <span key={index} className="tag">{tag}</span>
+                ))}
+              </div>
+              <p className="review-preview">{review.content}</p>
+              <div className="review-footer">
+                <div className="review-stats">
+                  <span className="stat-item">👁️ {review.views || 0}</span>
+                  <button 
+                    className={`like-button ${likedReviews[review.id] ? 'liked' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLike(review.id);
+                    }}
+                  >
+                    ❤️ {review.likes || 0}
                   </button>
-                  <button className="review-action">
-                    비공감 {dislikes}
-                  </button>
-                  <button className="review-action">
-                    신고
-                  </button>
+                  <span className="stat-item">💬 {review.comments || 0}</span>
                 </div>
               </div>
             </div>
-          );
-        })}
+          </article>
+        ))}
       </div>
     </div>
   );

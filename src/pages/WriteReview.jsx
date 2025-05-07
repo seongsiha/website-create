@@ -216,7 +216,7 @@ const WriteReview = () => {
       
       // 이미지 미리보기 URL 정리
       reviewData.images.forEach(url => URL.revokeObjectURL(url));
-      
+
       alert('리뷰가 성공적으로 작성되었습니다!');
       navigate('/reviews');
     } catch (error) {

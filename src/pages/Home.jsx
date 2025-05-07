@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import Hero from '../components/Hero/Hero';
@@ -57,42 +58,111 @@ const ReviewCard = ({ review }) => {
 
 const Home = () => {
   const [popularReviews, setPopularReviews] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredReviews, setFilteredReviews] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchPopularReviews = async () => {
-      try {
-        const reviewsRef = collection(db, 'reviews');
-        // 조회수 기준으로 상위 3개 리뷰를 가져옵니다
-        const q = query(
-          reviewsRef,
-          orderBy('views', 'desc'),
-          limit(3)
-        );
-        const querySnapshot = await getDocs(q);
-        const reviews = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setPopularReviews(reviews);
-      } catch (error) {
-        console.error('Error fetching popular reviews:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPopularReviews();
   }, []);
+
+  const fetchPopularReviews = async () => {
+    try {
+      const reviewsRef = collection(db, 'reviews');
+      const q = query(reviewsRef);
+      const querySnapshot = await getDocs(q);
+      const reviews = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      // 조회수+좋아요 합산 기준 내림차순 정렬
+      const sorted = reviews.sort((a, b) => {
+        const aScore = (a.views || 0) + (a.likes || 0);
+        const bScore = (b.views || 0) + (b.likes || 0);
+        return bScore - aScore;
+      });
+      setPopularReviews(sorted.slice(0, 3));
+      setFilteredReviews(sorted.slice(0, 3));
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching popular reviews:', error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredReviews(popularReviews);
+      setIsSearching(false);
+    } else {
+      setIsSearching(true);
+      const filtered = popularReviews.filter(review => {
+        const titleMatch = review.title?.toLowerCase().includes(searchQuery.toLowerCase());
+        const contentMatch = review.content?.toLowerCase().includes(searchQuery.toLowerCase());
+        const tagMatch = review.tags?.some(tag => 
+          tag.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        return titleMatch || contentMatch || tagMatch;
+      });
+      setFilteredReviews(filtered);
+    }
+  }, [searchQuery, popularReviews]);
+
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleReviewClick = (reviewId) => {
+    navigate(`/review/${reviewId}`);
+  };
+
+  if (loading) {
+    return <div className="loading">로딩 중...</div>;
+  }
 
   return (
     <>
       <Hero />
       <ChartSection />
-      <section className="featured-reviews">
+      <section className="featured-reviews main-page-container">
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="제목, 내용, 태그로 검색..."
+            value={searchQuery}
+            onChange={handleSearch}
+            className="search-input"
+          />
+        </div>
         <h2>인기 리뷰</h2>
-        {loading ? (
-          <div className="loading">리뷰를 불러오는 중...</div>
+        {isSearching ? (
+          <div className="search-results-container">
+            <div className="search-results-header">
+              <h3>검색 결과</h3>
+              <span className="search-results-count">"{searchQuery}" 검색 결과: {filteredReviews.length}개</span>
+            </div>
+            <div className="search-results-list">
+              {filteredReviews.map((review) => (
+                <div 
+                  key={review.id} 
+                  className="search-result-item"
+                  onClick={() => handleReviewClick(review.id)}
+                >
+                  <div className="search-result-title">{review.title}</div>
+                  <div className="search-result-content">
+                    {review.content?.substring(0, 100)}...
+                  </div>
+                  <div className="search-result-tags">
+                    {review.tags?.map((tag, index) => (
+                      <span key={index} className="tag">{tag}</span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
           <div className="review-grid">
             {popularReviews.map((review) => (

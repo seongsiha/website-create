@@ -321,4 +321,47 @@
   .delete-button {
     width: 100%;
   }
+}
+
+.share-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.share-buttons button {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.share-buttons button:hover {
+  transform: scale(1.1);
+}
+
+.kakao-share-button {
+  width: 32px;
+  height: 32px;
+  background: #FEE500;
+  border: none;
+  border-radius: 50%;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kakao-share-button:hover {
+  transform: scale(1.1);
+}
+
+.kakao-share-button::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDggMTkyIj48cGF0aCBmaWxsPSIjMDAwMDAwIiBkPSJNMTA0IDBDNDYuNiAwIDAgMzYuNiAwIDgyYzAgMjguNSAxOS4xIDUzLjQgNDcuNiA2Ny44TDM4IDE5MmwxMDQuMy02MS41YzU0LjQtMi44IDk3LjctNDAuNyA5Ny43LTgyLjRDMjA4IDM2LjYgMTYxLjQgMCAxMDQgMHoiLz48L3N2Zz4=');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 } 

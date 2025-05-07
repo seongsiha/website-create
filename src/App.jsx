@@ -16,6 +16,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Community from './pages/Community';
 import Reviews from './pages/Reviews';
+import ReviewDetail from './pages/ReviewDetail';
+import SearchResults from './pages/SearchResults';
 
 // 코드 스플리팅 적용
 const WriteReview = React.lazy(() => import('./pages/WriteReview'));
@@ -48,6 +50,8 @@ function App() {
             <Route path="/change-password" element={<ChangePassword />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/reviews" element={<Reviews />} />
+            <Route path="/reviews/:reviewId" element={<ReviewDetail />} />
+            <Route path="/search" element={<SearchResults />} />
           </Routes>
         </Suspense>
         <Footer />

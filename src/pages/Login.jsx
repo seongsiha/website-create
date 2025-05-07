@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { auth } from '../firebase/config';
-import { signInWithEmailAndPassword, signInWithPopup, 
-         GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import './Login.css';
 
 const Login = () => {
@@ -36,29 +35,6 @@ const Login = () => {
     } catch (error) {
       console.error('로그인 실패:', error);
       setError('이메일 또는 비밀번호가 올바르지 않습니다.');
-    }
-  };
-
-  const handleSocialLogin = async (provider) => {
-    try {
-      let authProvider;
-      switch (provider) {
-        case 'google':
-          authProvider = new GoogleAuthProvider();
-          break;
-        case 'facebook':
-          authProvider = new FacebookAuthProvider();
-          break;
-        default:
-          throw new Error('지원하지 않는 소셜 로그인입니다.');
-      }
-
-      const result = await signInWithPopup(auth, authProvider);
-      console.log('소셜 로그인 성공:', result.user);
-      navigate('/');
-    } catch (error) {
-      console.error('소셜 로그인 실패:', error);
-      setError('소셜 로그인에 실패했습니다.');
     }
   };
 
@@ -98,13 +74,6 @@ const Login = () => {
 
         <div className="helper-links">
           <Link to="/forgot-password">비밀번호 찾기</Link> | <Link to="/signup">회원가입</Link>
-        </div>
-
-        <div className="social-login">
-          <p>소셜 계정으로 로그인</p>
-          <div className="social-buttons">
-            <button type="button" onClick={() => handleSocialLogin('google')}>구글</button>
-          </div>
         </div>
       </form>
 

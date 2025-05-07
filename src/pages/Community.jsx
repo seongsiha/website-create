@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { postsCollection, query, orderBy, getDocs } from '../firebase/config';
+import { postsCollection, query, orderBy, getDocs, where } from '../firebase/config';
+import { limit } from 'firebase/firestore';
 import './Community.css';
 
 const Community = () => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
+  const [trendingPosts, setTrendingPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
+        // 일반 게시글 가져오기
         const q = query(postsCollection, orderBy('createdAt', 'desc'));
         const querySnapshot = await getDocs(q);
         const postsData = querySnapshot.docs.map(doc => ({
@@ -18,6 +21,19 @@ const Community = () => {
           ...doc.data()
         }));
         setPosts(postsData);
+
+        // 인기 게시글 가져오기 (좋아요 + 조회수 + 댓글수 기준)
+        const trendingQuery = query(
+          postsCollection,
+          orderBy('likes', 'desc'),
+          limit(5)
+        );
+        const trendingSnapshot = await getDocs(trendingQuery);
+        const trendingData = trendingSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setTrendingPosts(trendingData);
       } catch (error) {
         console.error('게시글 불러오기 실패:', error);
       } finally {
@@ -42,17 +58,31 @@ const Community = () => {
       <div className="trending-section">
         <div className="trending-header">
           <h2>
-            <i className="fas fa-chart-line"></i>
-            트렌딩 키워드
+            <i className="fas fa-fire"></i>
+            인기 게시글
           </h2>
           <span className="trending-update">실시간 업데이트</span>
         </div>
-        <div className="trending-keywords">
-          {['이세계 여행사', '마법공방', '판타지 추천', '로맨스 신작', '이달의 리뷰어'].map((keyword, index) => (
-            <button key={index} className="trending-tag">
-              <span className="tag-rank">{index + 1}</span>
-              <span className="tag-name">{keyword}</span>
-            </button>
+        <div className="trending-posts">
+          {trendingPosts.map((post, index) => (
+            <div 
+              key={post.id} 
+              className="trending-post-card"
+              onClick={() => navigate(`/community/post/${post.id}`)}
+            >
+              <div className="trending-post-rank">{index + 1}</div>
+              <div className="trending-post-content">
+                <h3 className="trending-post-title">{post.title}</h3>
+                <div className="trending-post-meta">
+                  <span className="trending-post-author">{post.author}</span>
+                  <div className="trending-post-stats">
+                    <span><i className="fas fa-heart"></i> {post.likes || 0}</span>
+                    <span><i className="fas fa-eye"></i> {post.views || 0}</span>
+                    <span><i className="fas fa-comment"></i> {post.commentCount || 0}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -62,7 +92,7 @@ const Community = () => {
         <button className="tab-button">자유게시판</button>
         <button className="tab-button">질문게시판</button>
         <button className="tab-button">추천게시판</button>
-        <button 
+        <button
           className="write-button"
           onClick={() => navigate('/community/write')}
         >

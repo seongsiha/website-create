@@ -17,6 +17,12 @@ import {
   serverTimestamp,
   getDoc
 } from '../firebase/config';
+import { 
+  FacebookShareButton, 
+  FacebookIcon,
+  TwitterShareButton,
+  TwitterIcon
+} from 'react-share';
 import './PostDetail.css';
 
 const PostDetail = () => {
@@ -243,6 +249,36 @@ const PostDetail = () => {
     setEditCommentContent('');
   };
 
+  const shareUrl = window.location.href;
+  const shareTitle = post?.title || '웹소설 리뷰';
+  const shareDescription = post?.content?.substring(0, 100) || '';
+
+  const handleKakaoShare = () => {
+    if (window.Kakao) {
+      window.Kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: shareTitle,
+          description: shareDescription,
+          imageUrl: 'https://your-default-image-url.jpg', // 기본 이미지 URL로 변경하세요
+          link: {
+            mobileWebUrl: shareUrl,
+            webUrl: shareUrl,
+          },
+        },
+        buttons: [
+          {
+            title: '웹으로 보기',
+            link: {
+              mobileWebUrl: shareUrl,
+              webUrl: shareUrl,
+            },
+          },
+        ],
+      });
+    }
+  };
+
   if (loading) {
     return <div className="loading">로딩 중...</div>;
   }
@@ -286,6 +322,15 @@ const PostDetail = () => {
                 <i className="fas fa-heart"></i> {post.likes || 0}
               </button>
               <span><i className="fas fa-comment"></i> {comments.length}</span>
+            </div>
+            <div className="share-buttons">
+              <button onClick={handleKakaoShare} className="kakao-share-button" aria-label="카카오톡 공유하기" />
+              <FacebookShareButton url={shareUrl}>
+                <FacebookIcon size={32} round />
+              </FacebookShareButton>
+              <TwitterShareButton url={shareUrl} title={shareTitle}>
+                <TwitterIcon size={32} round />
+              </TwitterShareButton>
             </div>
           </div>
 

@@ -52,9 +52,9 @@ const Navigation = () => {
             <Link to="/community" className="nav-link">커뮤니티</Link>
           </li>
           {user && (
-            <li className="nav-item">
-              <Link to="/write-review" className="nav-link write-review-link">리뷰 작성</Link>
-            </li>
+          <li className="nav-item">
+            <Link to="/write-review" className="nav-link write-review-link">리뷰 작성</Link>
+          </li>
           )}
         </ul>
 
@@ -63,15 +63,15 @@ const Navigation = () => {
             <div className="user-section">
               <span className="user-email">{user.email}</span>
               <Link to="/profile" className="profile-link">
-                <i className="fas fa-user"></i> 프로필
+                프로필
               </Link>
               <button onClick={handleLogout} className="logout-button">
-                <i className="fas fa-sign-out-alt"></i> 로그아웃
+                로그아웃
               </button>
             </div>
           ) : (
             <div className="auth-buttons">
-              <Link to="/login" className="login-button">로그인</Link>
+          <Link to="/login" className="login-button">로그인</Link>
               <Link to="/register" className="signup-button">회원가입</Link>
             </div>
           )}

@@ -56,23 +56,8 @@ button:hover {
   margin: 0 0.5rem;
 }
 
-.social-login {
-  margin-top: 2rem;
+.error-message {
+  color: #ff4757;
   text-align: center;
-}
-
-.social-buttons {
-  display: grid;
-  gap: 1rem;
   margin-top: 1rem;
-}
-
-.social-buttons button {
-  background-color: #f8f9fa;
-  color: #333;
-  border: 1px solid #ddd;
-}
-
-.social-buttons button:hover {
-  background-color: #e9ecef;
 } 
