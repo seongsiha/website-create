@@ -35,9 +35,31 @@ const PostDetail = () => {
   const [editCommentContent, setEditCommentContent] = useState('');
   const [isLiked, setIsLiked] = useState(false);
   const [loading, setLoading] = useState(true);
-  const viewIncrementedRef = useRef(false);
   const [isAuthor, setIsAuthor] = useState(false);
   const [error, setError] = useState(null);
+  const viewIncrementedRef = useRef(false);
+
+  // 조회수 증가 함수
+  const incrementViewCount = async () => {
+    if (!viewIncrementedRef.current) {
+      try {
+        const postDoc = await getDoc(doc(db, 'posts', postId));
+        if (postDoc.exists()) {
+          const currentViews = postDoc.data().views || 0;
+          await updateDoc(doc(db, 'posts', postId), {
+            views: currentViews + 1
+          });
+          viewIncrementedRef.current = true;
+          setPost(prev => ({
+            ...prev,
+            views: currentViews + 1
+          }));
+        }
+      } catch (error) {
+        console.error('조회수 증가 실패:', error);
+      }
+    }
+  };
 
   // 날짜 포맷 함수
   const formatDate = (timestamp) => {
@@ -64,16 +86,13 @@ const PostDetail = () => {
             (postData.author === auth.currentUser?.email)
           );
           
-          if (!viewIncrementedRef.current) {
-            await updateDoc(doc(db, 'posts', postId), {
-              viewCount: increment(1),
-            });
-            viewIncrementedRef.current = true;
-          }
+          // 조회수 증가
+          await incrementViewCount();
         } else {
           navigate('/community');
         }
       } catch (err) {
+        console.error('게시글 로드 중 에러:', err);
         setError('게시글을 불러오는 중 오류가 발생했습니다.');
       } finally {
         setLoading(false);
@@ -173,7 +192,7 @@ const PostDetail = () => {
       const newCommentWithId = {
         id: docRef.id,
         ...commentData,
-        createdAt: new Date() // 임시로 현재 시간을 표시
+        createdAt: new Date()
       };
 
       setComments(prev => [...prev, newCommentWithId]);
@@ -184,6 +203,10 @@ const PostDetail = () => {
       await updateDoc(postDoc, {
         commentCount: increment(1)
       });
+      setPost(prev => ({
+        ...prev,
+        commentCount: (prev.commentCount || 0) + 1
+      }));
     } catch (error) {
       console.error('댓글 작성 실패:', error);
       alert('댓글 작성에 실패했습니다. 다시 시도해주세요.');
@@ -207,8 +230,12 @@ const PostDetail = () => {
         await deleteDoc(doc(db, 'comments', commentId));
         setComments(comments.filter(comment => comment.id !== commentId));
         await updateDoc(doc(db, 'posts', postId), {
-          commentCount: increment(-1),
+          commentCount: increment(-1)
         });
+        setPost(prev => ({
+          ...prev,
+          commentCount: (prev.commentCount || 0) - 1
+        }));
       } catch (err) {
         setError('댓글 삭제 중 오류가 발생했습니다.');
       }

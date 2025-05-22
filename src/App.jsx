@@ -51,6 +51,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/reviews/:reviewId" element={<ReviewDetail />} />
+            <Route path="/reviews/:reviewId/edit" element={<WriteReview />} />
             <Route path="/search" element={<SearchResults />} />
           </Routes>
         </Suspense>

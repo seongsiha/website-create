@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { postsCollection, auth } from '../firebase/config';
 import { addDoc, serverTimestamp } from 'firebase/firestore';
-import TagInput from '../components/TagSystem/TagInput';
 import './WritePost.css';
 
 const WritePost = () => {
@@ -10,7 +9,6 @@ const WritePost = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('자유게시판');
-  const [selectedTags, setSelectedTags] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -34,7 +32,6 @@ const WritePost = () => {
         title: title.trim(),
         content: content.trim(),
         category,
-        tags: selectedTags,
         author: auth.currentUser.email,
         userId: auth.currentUser.uid,
         createdAt: serverTimestamp(),
@@ -59,7 +56,7 @@ const WritePost = () => {
       <h1>글쓰기</h1>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label>카테고리</label>
+          <label>게시판</label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
@@ -88,14 +85,6 @@ const WritePost = () => {
             onChange={(e) => setContent(e.target.value)}
             placeholder="내용을 입력하세요"
             rows={10}
-          />
-        </div>
-
-        <div className="form-group">
-          <label>태그</label>
-          <TagInput
-            selectedTags={selectedTags}
-            setSelectedTags={setSelectedTags}
           />
         </div>
 

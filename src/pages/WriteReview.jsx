@@ -1,11 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
+import { useNavigate, useParams } from 'react-router-dom';
+import { 
+  collection, 
+  addDoc, 
+  doc, 
+  getDoc, 
+  updateDoc,
+  serverTimestamp,
+  getDocs,
+  query,
+  where
+} from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '../firebase/config';
 import './WriteReview.css';
 
 const WriteReview = () => {
+  const { reviewId } = useParams();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reviewData, setReviewData] = useState({
@@ -22,6 +33,7 @@ const WriteReview = () => {
   const [suggestedTags, setSuggestedTags] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -31,8 +43,37 @@ const WriteReview = () => {
       }
     });
 
+    if (reviewId) {
+      setIsEditMode(true);
+      loadReview();
+    }
+
     return () => unsubscribe();
-  }, [navigate]);
+  }, [navigate, reviewId]);
+
+  const loadReview = async () => {
+    try {
+      const reviewRef = doc(db, 'reviews', reviewId);
+      const reviewDoc = await getDoc(reviewRef);
+      
+      if (reviewDoc.exists()) {
+        const data = reviewDoc.data();
+        setReviewData({
+          title: data.title || '',
+          novelTitle: data.novelTitle || '',
+          content: data.content || '',
+          rating: data.rating || 5,
+          genre: data.genre || '판타지',
+          tags: data.tags || [],
+          images: data.images || [],
+          imageFiles: []
+        });
+      }
+    } catch (error) {
+      console.error('리뷰 로드 실패:', error);
+      setError('리뷰를 불러오는 중 오류가 발생했습니다.');
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -186,7 +227,7 @@ const WriteReview = () => {
         throw new Error('리뷰 내용을 입력해주세요.');
       }
 
-      let imageUrls = [];
+      let imageUrls = reviewData.images;
       if (reviewData.imageFiles.length > 0) {
         try {
           imageUrls = await uploadImages();
@@ -203,25 +244,34 @@ const WriteReview = () => {
         genre: reviewData.genre,
         tags: reviewData.tags,
         images: imageUrls,
-        userId: user.uid,
-        userEmail: user.email,
-        createdAt: serverTimestamp(),
-        likes: 0,
-        comments: [],
-        views: 0
+        updatedAt: serverTimestamp()
       };
 
-      // 리뷰 저장
-      await addDoc(collection(db, 'reviews'), reviewDataToSave);
+      if (isEditMode) {
+        // 수정 모드
+        const reviewRef = doc(db, 'reviews', reviewId);
+        await updateDoc(reviewRef, reviewDataToSave);
+        alert('리뷰가 성공적으로 수정되었습니다!');
+      } else {
+        // 새 리뷰 작성 모드
+        reviewDataToSave.userId = user.uid;
+        reviewDataToSave.userEmail = user.email;
+        reviewDataToSave.createdAt = serverTimestamp();
+        reviewDataToSave.likes = 0;
+        reviewDataToSave.comments = [];
+        reviewDataToSave.views = 0;
+        
+        await addDoc(collection(db, 'reviews'), reviewDataToSave);
+        alert('리뷰가 성공적으로 작성되었습니다!');
+      }
       
       // 이미지 미리보기 URL 정리
       reviewData.images.forEach(url => URL.revokeObjectURL(url));
 
-      alert('리뷰가 성공적으로 작성되었습니다!');
       navigate('/reviews');
     } catch (error) {
-      console.error('리뷰 작성 중 오류 발생:', error);
-      setError(error.message || '리뷰 작성 중 오류가 발생했습니다. 다시 시도해주세요.');
+      console.error('리뷰 저장 중 오류 발생:', error);
+      setError(error.message || '리뷰 저장 중 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setIsSubmitting(false);
     }
@@ -230,8 +280,8 @@ const WriteReview = () => {
   return (
     <div className="write-review-container">
       <div className="write-review-header">
-        <h1>리뷰 작성</h1>
-        <p>작품에 대한 솔직한 리뷰를 남겨주세요</p>
+        <h1>{isEditMode ? '리뷰 수정' : '리뷰 작성'}</h1>
+        <p>{isEditMode ? '리뷰를 수정해주세요' : '작품에 대한 솔직한 리뷰를 남겨주세요'}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="write-review-form">

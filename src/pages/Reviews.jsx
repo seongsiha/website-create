@@ -11,7 +11,8 @@ import {
   where,
   getDoc,
   addDoc,
-  deleteDoc
+  deleteDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 import './Reviews.css';
@@ -25,8 +26,16 @@ const Reviews = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredReviews, setFilteredReviews] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const viewIncrementedRef = useRef({});
+
+  useEffect(() => {
+    // 관리자 권한 확인
+    if (auth.currentUser?.email === 'seongsiha@naver.com') {
+      setIsAdmin(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -54,8 +63,19 @@ const Reviews = () => {
   }, [activeTab]);
 
   useEffect(() => {
-    setFilteredReviews(reviews);
-  }, [reviews]);
+    let sorted = [...reviews];
+    if (activeTab === '최신리뷰') {
+      sorted.sort((a, b) => {
+        if (!a.createdAt || !b.createdAt) return 0;
+        return b.createdAt.seconds - a.createdAt.seconds;
+      });
+    } else if (activeTab === '조회수순(인기리뷰)') {
+      sorted.sort((a, b) => (b.views || 0) - (a.views || 0));
+    } else if (activeTab === '좋아요순') {
+      sorted.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+    }
+    setFilteredReviews(sorted);
+  }, [activeTab, reviews]);
 
   const fetchLikedReviews = async () => {
     try {
@@ -170,9 +190,39 @@ const Reviews = () => {
   };
 
   const formatDate = (timestamp) => {
-    if (!timestamp) return '';
-    const date = timestamp.toDate();
-    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')} 오후`;
+    if (!timestamp) return '날짜 없음';
+    
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const now = new Date();
+    const diff = now - date;
+    
+    // 1분 미만
+    if (diff < 60 * 1000) {
+      return '방금 전';
+    }
+    // 1시간 미만
+    if (diff < 60 * 60 * 1000) {
+      return `${Math.floor(diff / (60 * 1000))}분 전`;
+    }
+    // 24시간 미만
+    if (diff < 24 * 60 * 60 * 1000) {
+      return `${Math.floor(diff / (60 * 60 * 1000))}시간 전`;
+    }
+    // 7일 미만
+    if (diff < 7 * 24 * 60 * 60 * 1000) {
+      return `${Math.floor(diff / (24 * 60 * 60 * 1000))}일 전`;
+    }
+    
+    // 7일 이상 지난 경우
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = date.getHours() < 12 ? '오전' : '오후';
+    const displayHours = date.getHours() % 12 || 12; // 12시간제로 변환
+    
+    return `${year}.${month}.${day} ${ampm} ${displayHours}:${minutes}`;
   };
 
   const handleTabClick = (e, tab) => {
@@ -236,6 +286,63 @@ const Reviews = () => {
     setSearchQuery(e.target.value);
   };
 
+  const handleDeleteReview = async (reviewId, e) => {
+    e.stopPropagation(); // 리뷰 클릭 이벤트 전파 방지
+    
+    if (!isAdmin) {
+      alert('관리자만 삭제할 수 있습니다.');
+      return;
+    }
+
+    if (window.confirm('정말로 이 리뷰를 삭제하시겠습니까?')) {
+      try {
+        await deleteDoc(doc(db, 'reviews', reviewId));
+        setReviews(prevReviews => prevReviews.filter(review => review.id !== reviewId));
+        setFilteredReviews(prevReviews => prevReviews.filter(review => review.id !== reviewId));
+        alert('리뷰가 삭제되었습니다.');
+      } catch (error) {
+        console.error('리뷰 삭제 실패:', error);
+        alert('리뷰 삭제에 실패했습니다.');
+      }
+    }
+  };
+
+  const handleBlockUser = async (userId, userEmail, e) => {
+    e.stopPropagation(); // 리뷰 클릭 이벤트 전파 방지
+    
+    if (!isAdmin) {
+      alert('관리자만 차단할 수 있습니다.');
+      return;
+    }
+
+    if (window.confirm(`${userEmail} 사용자를 차단하시겠습니까?`)) {
+      try {
+        // 차단된 사용자 목록에 추가
+        await addDoc(collection(db, 'blockedUsers'), {
+          userId,
+          userEmail,
+          blockedAt: serverTimestamp(),
+          blockedBy: auth.currentUser.email
+        });
+        
+        // 해당 사용자의 모든 리뷰 삭제
+        const userReviews = reviews.filter(review => review.userId === userId);
+        for (const review of userReviews) {
+          await deleteDoc(doc(db, 'reviews', review.id));
+        }
+        
+        // 화면에서 해당 사용자의 리뷰 제거
+        setReviews(prevReviews => prevReviews.filter(review => review.userId !== userId));
+        setFilteredReviews(prevReviews => prevReviews.filter(review => review.userId !== userId));
+        
+        alert('사용자가 차단되었습니다.');
+      } catch (error) {
+        console.error('사용자 차단 실패:', error);
+        alert('사용자 차단에 실패했습니다.');
+      }
+    }
+  };
+
   if (loading) return <div className="loading">리뷰를 불러오는 중...</div>;
   if (error) return <div className="error-message">{error}</div>;
 
@@ -289,10 +396,10 @@ const Reviews = () => {
         </a>
         <a 
           href="#" 
-          className={activeTab === '인기리뷰' ? 'active' : ''} 
-          onClick={(e) => handleTabClick(e, '인기리뷰')}
+          className={activeTab === '조회수순(인기리뷰)' ? 'active' : ''} 
+          onClick={(e) => handleTabClick(e, '조회수순(인기리뷰)')}
         >
-          인기 리뷰
+          조회수순(인기리뷰)
         </a>
         <a 
           href="#" 
@@ -346,6 +453,22 @@ const Reviews = () => {
                   </button>
                   <span className="stat-item">💬 {review.comments || 0}</span>
                 </div>
+                {isAdmin && (
+                  <div className="admin-actions">
+                    <button 
+                      className="admin-button delete"
+                      onClick={(e) => handleDeleteReview(review.id, e)}
+                    >
+                      <i className="fas fa-trash"></i> 삭제
+                    </button>
+                    <button 
+                      className="admin-button block"
+                      onClick={(e) => handleBlockUser(review.userId, review.userEmail, e)}
+                    >
+                      <i className="fas fa-ban"></i> 차단
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </article>
